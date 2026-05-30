@@ -13,7 +13,7 @@
             text-align: center;
             margin: 0;
             padding: 20px;
-            padding-bottom: 80px; /* Espaço para as notificações */
+            padding-bottom: 80px; 
         }
         .container {
             max-width: 650px;
@@ -28,72 +28,59 @@
         
         /* Painel Superior */
         .dashboard-grid {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
+            display: flex; gap: 15px; margin-bottom: 25px;
         }
         .dashboard-grid > div { flex: 1; }
         @media (max-width: 500px) { .dashboard-grid { flex-direction: column; } }
 
         /* Status */
         .status-box {
-            background-color: #2c2c2c;
-            padding: 15px;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
+            background-color: #2c2c2c; padding: 15px; border-radius: 10px; display: flex;
+            flex-direction: column; justify-content: center; position: relative;
         }
-        #level-text { font-size: 2em; font-weight: bold; margin: 0; color: #FFD700; }
+        #level-text { font-size: 1.8em; font-weight: bold; margin: 0; color: #FFD700; }
         #xp-text { font-size: 1.1em; color: #aaa; margin: 5px 0; }
         
-        .active-buffs {
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: #00bcd4;
-            min-height: 20px;
-        }
+        .active-buffs { margin-top: 10px; font-size: 0.9em; color: #00bcd4; min-height: 20px; }
 
         /* Ouro */
         .gold-box {
-            background-color: #2c2c2c;
-            padding: 15px;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border: 2px solid #FFD700;
+            background-color: #2c2c2c; padding: 15px; border-radius: 10px; display: flex;
+            flex-direction: column; justify-content: center; align-items: center; border: 2px solid #FFD700;
         }
         .gold-title { font-size: 1.1em; color: #aaa; margin: 0 0 5px 0; }
         .gold-amount { font-size: 2.2em; font-weight: bold; color: #FFD700; margin: 0; }
 
         /* Barra */
-        .progress-bar-bg {
-            width: 100%; background-color: #444; border-radius: 10px; margin-top: 10px; overflow: hidden; height: 16px;
-        }
-        .progress-bar-fill {
-            height: 100%; background-color: #4CAF50; width: 0%; transition: width 0.5s ease-in-out;
-        }
+        .progress-bar-bg { width: 100%; background-color: #444; border-radius: 10px; margin-top: 10px; overflow: hidden; height: 16px; }
+        .progress-bar-fill { height: 100%; background-color: #4CAF50; width: 0%; transition: width 0.5s ease-in-out; }
 
         /* Caixas Gerais */
         .box-section {
             background-color: #252525; padding: 20px; border-radius: 10px; text-align: left; margin-bottom: 25px; border: 1px solid #333;
         }
-        .box-section h3 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 8px; }
+        .box-section h3 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .box-quests h3 { color: #4CAF50; }
+        .box-bonus h3 { color: #00bcd4; }
         .box-shop h3 { color: #FFD700; border-color: #FFD700; }
         .box-achievements h3 { color: #9c27b0; }
 
         /* Missões */
-        .quest-item { display: flex; align-items: center; margin: 12px 0; font-size: 1.1em; cursor: pointer; }
+        .quest-item { display: flex; align-items: center; margin: 12px 0; font-size: 1.1em; cursor: pointer; justify-content: space-between; width: 100%; }
+        .quest-left { display: flex; align-items: center; }
         .quest-item input[type="checkbox"] { width: 22px; height: 22px; margin-right: 12px; cursor: pointer; accent-color: #4CAF50; }
+        
+        /* Input de Missões Bónus */
+        .bonus-input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .bonus-input { flex: 1; padding: 10px; background-color: #1e1e1e; border: 1px solid #444; color: #fff; border-radius: 5px; font-size: 1em; }
+        .bonus-input:focus { border-color: #00bcd4; outline: none; }
+        .btn-add-bonus { padding: 10px 15px; background-color: #00bcd4; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .btn-add-bonus:hover { background-color: #33c9dc; }
+        .btn-delete-bonus { background: none; border: none; color: #ff5252; cursor: pointer; font-size: 1.1em; padding: 0 5px; }
+        .btn-delete-bonus:hover { color: #ff7979; }
 
         /* Conquistas */
-        .achievements-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-        }
+        .achievements-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .achievement-item {
             background-color: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; display: flex; align-items: center; gap: 10px;
             opacity: 0.4; filter: grayscale(100%); transition: 0.3s;
@@ -104,9 +91,7 @@
         .ach-text p { margin: 0; font-size: 0.7em; color: #aaa; }
 
         /* Loja */
-        .shop-item {
-            display: flex; justify-content: space-between; align-items: center; background-color: #1e1e1e; padding: 12px 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #333;
-        }
+        .shop-item { display: flex; justify-content: space-between; align-items: center; background-color: #1e1e1e; padding: 12px 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #333; }
         .shop-item-info { display: flex; flex-direction: column; }
         .shop-item-name { font-size: 1.1em; font-weight: bold; }
         .shop-item-cost { font-size: 0.9em; color: #FFD700; font-weight: bold; margin-top: 3px;}
@@ -124,9 +109,7 @@
         .chart-container { width: 100%; height: 280px; margin-bottom: 20px; }
 
         /* Notificações Flutuantes (Toasts) */
-        #toast-container {
-            position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000;
-        }
+        #toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
         .toast {
             min-width: 250px; max-width: 350px; background-color: #333; color: #fff; padding: 15px 20px; border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-size: 0.95em; line-height: 1.4; transform: translateX(120%);
@@ -139,13 +122,34 @@
         
         @keyframes slideIn { from { transform: translateX(120%); } to { transform: translateX(0); } }
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateY(10px); } }
+
+        /* Modal do Sistema de Classes */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85); display: none; justify-content: center;
+            align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box;
+        }
+        .modal-box {
+            background-color: #1e1e1e; border: 2px solid #9c27b0; border-radius: 15px;
+            padding: 25px; max-width: 550px; width: 100%; text-align: center; max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 0 20px rgba(156, 39, 176, 0.5);
+        }
+        .modal-box h2 { color: #9c27b0; margin-top: 0; font-size: 1.8em; }
+        .class-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .class-btn {
+            background-color: #252525; color: #fff; border: 1px solid #444; padding: 12px;
+            border-radius: 8px; cursor: pointer; text-align: left; transition: 0.2s; display: flex; flex-direction: column;
+        }
+        .class-btn:hover { border-color: #9c27b0; background-color: #2a1b38; transform: scale(1.02); }
+        .class-name { font-weight: bold; font-size: 1.1em; color: #FFD700; }
+        .class-desc { font-size: 0.85em; color: #aaa; margin-top: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>🎮 RPG da Vida Real</h1>
-    <p class="subtitle">Complete missões, ganhe ouro e compre recompensas</p>
+    <p class="subtitle">Complete missões, ganhe ouro e evolua até o Nível 20</p>
     
     <div class="dashboard-grid">
         <div class="status-box">
@@ -184,21 +188,30 @@
     </div>
 
     <div class="box-section box-quests">
-        <h3>⚔️ Quadro de Missões Diárias</h3>
-        <label class="quest-item"><input type="checkbox" id="quest1"> ⏰ Acordar às 05:00</label>
-        <label class="quest-item"><input type="checkbox" id="quest2"> 💪 Ir à Academia / Praticar Exercício</label>
-        <label class="quest-item"><input type="checkbox" id="quest3"> 📚 Estudar / Codar (Foco 1h)</label>
-        <label class="quest-item"><input type="checkbox" id="quest4"> 🎨 Fazer meta pessoal (editar, escrever...)</label>
-        <label class="quest-item"><input type="checkbox" id="quest5"> 📖 Ler 10 páginas de um Livro</label>
-        <label class="quest-item"><input type="checkbox" id="quest6"> 🚫 Não jogar partida Solo</label>
-        <label class="quest-item"><input type="checkbox" id="quest7"> 😴 Dormir antes das 23:30</label>
+        <h3>⚔️ Quadro de Missões Diárias (Fixas)</h3>
+        <label class="quest-item"><div class="quest-left"><input type="checkbox" id="quest1"> ⏰ Acordar às 05:00</div></label>
+        <label class="quest-item"><div class="quest-left"><input type="checkbox" id="quest2"> 💪 Ir à Academia / Praticar Exercício</div></label>
+        <label class="quest-item"><div class="quest-left"><input type="checkbox" id="quest3"> 📚 Estudar / Codar (Foco 1h)</div></label>
+        <label class="quest-item"><div class="quest-left"><input type="checkbox" id="quest4"> 🎨 Fazer meta pessoal (editar, escrever...)</div></label>
+        <label class="quest-item"><div class="quest-left"><input type="checkbox" id="quest5"> 📖 Ler 10 páginas de um Livro</div></label>
+        <label class="quest-item"><div class="quest-left"><input type="checkbox" id="quest6"> 🚫 Não jogar partida Solo</div></label>
+        <label class="quest-item"><div class="quest-left"><input type="checkbox" id="quest7"> 😴 Dormir antes das 23:30</div></label>
+    </div>
+
+    <div class="box-section box-bonus">
+        <h3>✨ Missões Bónus Diárias <span style="font-size: 0.6em; color: #aaa;" id="bonus-counter">(0/3)</span></h3>
+        <div class="bonus-input-group" id="bonus-form">
+            <input type="text" id="bonus-input-text" class="bonus-input" placeholder="Nova tarefa dinâmica para hoje...">
+            <button class="btn-add-bonus" onclick="addBonusQuest()">Adicionar</button>
+        </div>
+        <div id="bonus-quests-container">
+            </div>
     </div>
 
     <button class="btn-submit" onclick="consolidateDay()">☀️ Finalizar e Consolidar o Dia</button>
 
     <div class="box-section box-shop">
         <h3>🏪 Taberna de Recompensas e Magias</h3>
-        
         <div class="shop-item">
             <div class="shop-item-info">
                 <span class="shop-item-name">🍧 Tomar 1 Açaí Completo</span>
@@ -207,7 +220,6 @@
             </div>
             <button class="btn-buy" onclick="buyItem('Açaí', 100, 'reward')">Comprar</button>
         </div>
-        
         <div class="shop-item">
             <div class="shop-item-info">
                 <span class="shop-item-name">🛡️ Escudo de Proteção</span>
@@ -216,7 +228,6 @@
             </div>
             <button class="btn-buy" onclick="buyItem('Escudo', 50, 'shield')">Comprar</button>
         </div>
-
         <div class="shop-item">
             <div class="shop-item-info">
                 <span class="shop-item-name">🧪 Poção de XP Duplo</span>
@@ -231,11 +242,43 @@
     <button class="btn-reset" onclick="resetGame()">Resetar Tudo</button>
 </div>
 
+<div id="class-modal" class="modal-overlay">
+    <div class="modal-box">
+        <h2>✨ O Despertar da Classe</h2>
+        <p style="color: #ccc; margin-bottom: 20px;">Atingiste o Nível 7! Escolhe a tua especialização com sabedoria. Cada classe dá-te o <b>dobro de XP</b> numa missão específica para sempre.</p>
+        <div class="class-grid">
+            <button class="class-btn" onclick="chooseClass('Bárbaro')">
+                <span class="class-name">🪓 Bárbaro</span><span class="class-desc">O dobro de XP em [Ir à Academia / Praticar Exercício].</span>
+            </button>
+            <button class="class-btn" onclick="chooseClass('Mago')">
+                <span class="class-name">🔮 Mago</span><span class="class-desc">O dobro de XP em [Estudar / Codar].</span>
+            </button>
+            <button class="class-btn" onclick="chooseClass('Bardo')">
+                <span class="class-name">🎸 Bardo</span><span class="class-desc">O dobro de XP em [Metas Pessoais (editar/escrever)].</span>
+            </button>
+            <button class="class-btn" onclick="chooseClass('Guerreiro')">
+                <span class="class-name">⚔️ Guerreiro</span><span class="class-desc">O dobro de XP em [Acordar às 05:00].</span>
+            </button>
+            <button class="class-btn" onclick="chooseClass('Ranger')">
+                <span class="class-name">🏹 Ranger</span><span class="class-desc">O dobro de XP em [Ler 10 páginas].</span>
+            </button>
+            <button class="class-btn" onclick="chooseClass('Clérigo')">
+                <span class="class-name">🛡️ Clérigo</span><span class="class-desc">O dobro de XP em [Não jogar partida solo].</span>
+            </button>
+            <button class="class-btn" onclick="chooseClass('Druida')">
+                <span class="class-name">🌿 Druida</span><span class="class-desc">O dobro de XP em [Dormir antes das 23:30].</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 <div id="toast-container"></div>
 
 <script>
-    // --- CONFIGURAÇÕES DE BALANCEAMENTO ---
-    const levelThresholds = [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3500];
+    // --- CONFIGURAÇÕES DE BALANCEAMENTO E NÍVEIS ATÉ 20 ---
+    const levelThresholds = [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3500, 4400, 5400, 6500, 7700, 9000, 10400, 11900, 13500, 15200, 17000];
+    const MAX_LEVEL = 20;
+    
     const XP_PER_SUCCESS = 12;  
     const XP_PER_FAILURE = 10;  
     const PERFECT_BONUS = 60;   
@@ -246,19 +289,19 @@
     let currentLevel = parseInt(localStorage.getItem('currentLevel')) || 1;
     let currentGold = parseInt(localStorage.getItem('currentGold')) || 0; 
     let dayCount = parseInt(localStorage.getItem('dayCount')) || 0;
+    let playerClass = localStorage.getItem('playerClass') || 'Nenhuma';
     
-    // Status e Buffs Secretos
     let consecutivePerfectDays = parseInt(localStorage.getItem('consecPerfect')) || 0;
     let consecutiveReadingDays = parseInt(localStorage.getItem('consecReading')) || 0;
     let shieldActive = localStorage.getItem('shieldActive') === 'true';
     let doubleXpActive = localStorage.getItem('doubleXpActive') === 'true';
     
-    let achievements = JSON.parse(localStorage.getItem('achievements')) || {
-        primeirosPassos: false, inquebravel: false, tioPatinhas: false, ratoBiblioteca: false
-    };
-
+    let achievements = JSON.parse(localStorage.getItem('achievements')) || { primeirosPassos: false, inquebravel: false, tioPatinhas: false, ratoBiblioteca: false };
     let daysLabels = JSON.parse(localStorage.getItem('daysLabels')) || ['Início'];
     let xpData = JSON.parse(localStorage.getItem('xpData')) || [0];
+
+    // Carregamento de Missões Bónus do Save
+    let bonusQuests = JSON.parse(localStorage.getItem('bonusQuests')) || [];
 
     // --- SISTEMA DE NOTIFICAÇÕES (TOASTS) ---
     function showToast(message, type = 'success') {
@@ -267,42 +310,111 @@
         toast.className = `toast ${type}`;
         toast.innerHTML = message;
         container.appendChild(toast);
-        setTimeout(() => { toast.remove(); }, 4500); // Remove o HTML após a animação
+        setTimeout(() => { toast.remove(); }, 4500);
     }
 
     // --- GRÁFICO ---
     const ctx = document.getElementById('xpChart').getContext('2d');
     const xpChart = new Chart(ctx, {
-        type: 'line',
-        data: { labels: daysLabels, datasets: [{ label: 'Sua Jornada (XP)', data: xpData, borderColor: '#4CAF50', backgroundColor: 'rgba(76, 175, 80, 0.1)', borderWidth: 3, fill: true, tension: 0.2 }] },
+        type: 'line', data: { labels: daysLabels, datasets: [{ label: 'Sua Jornada (XP)', data: xpData, borderColor: '#4CAF50', backgroundColor: 'rgba(76, 175, 80, 0.1)', borderWidth: 3, fill: true, tension: 0.2 }] },
         options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true }, x: { title: { display: true, text: 'Histórico de Dias', color: '#aaa' } } }, plugins: { legend: { labels: { color: '#fff' } } } }
     });
 
-    // --- LÓGICA PRINCIPAL (CONSOLIDAR O DIA) ---
+    // --- LOGICA DE MISSÕES BÓNUS ---
+    function renderBonusQuests() {
+        const container = document.getElementById('bonus-quests-container');
+        container.innerHTML = '';
+        
+        bonusQuests.forEach((quest, index) => {
+            const checkedAttr = quest.checked ? 'checked' : '';
+            container.innerHTML += `
+                <label class="quest-item">
+                    <div class="quest-left">
+                        <input type="checkbox" id="bonus-quest-${index}" ${checkedAttr} onchange="toggleBonusQuest(${index})">
+                        <span>⭐ ${quest.text}</span>
+                    </div>
+                    <button class="btn-delete-bonus" onclick="deleteBonusQuest(${index})">🗑️</button>
+                </label>
+            `;
+        });
+
+        // Atualiza contador e esconde/mostra formulário se atingir 3
+        document.getElementById('bonus-counter').innerText = `(${bonusQuests.length}/3)`;
+        if(bonusQuests.length >= 3) {
+            document.getElementById('bonus-form').style.display = 'none';
+        } else {
+            document.getElementById('bonus-form').style.display = 'flex';
+        }
+    }
+
+    function addBonusQuest() {
+        const input = document.getElementById('bonus-input-text');
+        const text = input.value.trim();
+        
+        if (text === '') return;
+        if (bonusQuests.length >= 3) {
+            showToast("⚠️ Limite atingido! Só podes ter até 3 missões bónus por dia.", "error");
+            return;
+        }
+
+        bonusQuests.push({ text: text, checked: false });
+        input.value = '';
+        saveProgress();
+        renderBonusQuests();
+        showToast("✨ Missão bónus adicionada!", "success");
+    }
+
+    function toggleBonusQuest(index) {
+        bonusQuests[index].checked = document.getElementById(`bonus-quest-${index}`).checked;
+        saveProgress();
+    }
+
+    function deleteBonusQuest(index) {
+        bonusQuests.splice(index, 1);
+        saveProgress();
+        renderBonusQuests();
+    }
+
+    // --- LÓGICA PRINCIPAL ---
     function consolidateDay() {
-        const q1 = document.getElementById('quest1').checked;
-        const q2 = document.getElementById('quest2').checked;
-        const q3 = document.getElementById('quest3').checked;
-        const q4 = document.getElementById('quest4').checked;
-        const q5 = document.getElementById('quest5').checked; // Leitura
-        const q6 = document.getElementById('quest6').checked;
-        const q7 = document.getElementById('quest7').checked;
+        const q1 = document.getElementById('quest1').checked; 
+        const q2 = document.getElementById('quest2').checked; 
+        const q3 = document.getElementById('quest3').checked; 
+        const q4 = document.getElementById('quest4').checked; 
+        const q5 = document.getElementById('quest5').checked; 
+        const q6 = document.getElementById('quest6').checked; 
+        const q7 = document.getElementById('quest7').checked; 
 
-        const totalQuests = 7;
-        let completedCount = [q1, q2, q3, q4, q5, q6, q7].filter(Boolean).length;
-        let missedCount = totalQuests - completedCount;
+        const totalFixedQuests = 7;
+        let completedFixedCount = [q1, q2, q3, q4, q5, q6, q7].filter(Boolean).length;
+        let missedFixedCount = totalFixedQuests - completedFixedCount;
 
-        // Cálculo de XP base e modificadores da loja
-        let xpGained = completedCount * XP_PER_SUCCESS;
-        let xpLost = missedCount * XP_PER_FAILURE;
+        // Cálculo de XP com buffs de classe (Apenas nas fixas)
+        let xpGained = 0;
+        if (q1) xpGained += (playerClass === 'Guerreiro') ? XP_PER_SUCCESS * 2 : XP_PER_SUCCESS;
+        if (q2) xpGained += (playerClass === 'Bárbaro') ? XP_PER_SUCCESS * 2 : XP_PER_SUCCESS;
+        if (q3) xpGained += (playerClass === 'Mago') ? XP_PER_SUCCESS * 2 : XP_PER_SUCCESS;
+        if (q4) xpGained += (playerClass === 'Bardo') ? XP_PER_SUCCESS * 2 : XP_PER_SUCCESS;
+        if (q5) xpGained += (playerClass === 'Ranger') ? XP_PER_SUCCESS * 2 : XP_PER_SUCCESS;
+        if (q6) xpGained += (playerClass === 'Clérigo') ? XP_PER_SUCCESS * 2 : XP_PER_SUCCESS;
+        if (q7) xpGained += (playerClass === 'Druida') ? XP_PER_SUCCESS * 2 : XP_PER_SUCCESS;
 
+        // Somar os pontos das Missões Bónus completadas
+        let completedBonusCount = bonusQuests.filter(q => q.checked).length;
+        xpGained += (completedBonusCount * XP_PER_SUCCESS);
+
+        // Perda de XP (Apenas se falhar as missões FIXAS)
+        let xpLost = missedFixedCount * XP_PER_FAILURE;
+
+        // Buffs da Loja
         if (doubleXpActive) xpGained *= 2;
-        if (shieldActive) xpLost = 0; // Escudo bloqueia o dano!
+        if (shieldActive) xpLost = 0;
 
         let totalDayBalance = xpGained - xpLost;
 
         let perfectBonusApplied = false;
-        if (completedCount === totalQuests) {
+        // Bónus perfeito aplica-se se fizer todas as fixas
+        if (completedFixedCount === totalFixedQuests) {
             let bns = PERFECT_BONUS;
             if (doubleXpActive) bns *= 2;
             totalDayBalance += bns;
@@ -312,33 +424,31 @@
             consecutivePerfectDays = 0;
         }
 
-        // Rastrear hábito de leitura (Quest 5)
         if (q5) consecutiveReadingDays++; else consecutiveReadingDays = 0;
 
-        // Aplicar resultados
         currentXp += totalDayBalance;
         if (currentXp < 0) currentXp = 0; 
 
-        let goldGained = completedCount * GOLD_PER_QUEST;
+        // Ouro ganho total (Fixas + Bónus completadas)
+        let goldGained = (completedFixedCount + completedBonusCount) * GOLD_PER_QUEST;
         currentGold += goldGained;
         dayCount++;
 
-        // Mensagens via Toast
+        // Avisos visuais
         if (perfectBonusApplied) {
-            showToast(`🔥 <b>DIA PERFEITO!</b><br>Você ganhou +${totalDayBalance} XP e +${goldGained} Ouro!`, 'success');
+            showToast(`🔥 <b>DIA PERFEITO NAS FIXAS!</b><br>Ganhaste +${totalDayBalance} XP e +${goldGained} Ouro!`, 'success');
         } else {
             let prefix = totalDayBalance >= 0 ? '+' : '';
-            showToast(`✅ <b>Dia finalizado!</b><br>Saldo de XP: ${prefix}${totalDayBalance}. Ganhou +${goldGained} Ouro.`, totalDayBalance >= 0 ? 'success' : 'warning');
+            showToast(`✅ <b>Dia finalizado!</b><br>Saldo de XP: ${prefix}${totalDayBalance}. Ganhaste +${goldGained} Ouro.`, totalDayBalance >= 0 ? 'success' : 'warning');
         }
         
-        if (shieldActive && missedCount > 0) showToast(`🛡️ O seu Escudo defendeu -${missedCount * XP_PER_FAILURE} de dano de XP!`, 'info');
+        if (shieldActive && missedFixedCount > 0) showToast(`🛡️ O teu Escudo defendeu -${missedFixedCount * XP_PER_FAILURE} de dano de XP!`, 'info');
 
-        // Resetar buffs consumíveis
-        shieldActive = false;
-        doubleXpActive = false;
+        shieldActive = false; doubleXpActive = false;
+        daysLabels.push(`Dia ${dayCount}`); xpData.push(currentXp);
 
-        daysLabels.push(`Dia ${dayCount}`);
-        xpData.push(currentXp);
+        // Resetar marcas das missões bónus para o dia seguinte (mas mantém os textos)
+        bonusQuests.forEach(q => q.checked = false);
 
         checkAchievements();
         checkLevelUp();
@@ -346,6 +456,7 @@
 
         saveProgress();
         resetCheckboxes();
+        renderBonusQuests();
         updateUI();
         updateChart();
     }
@@ -354,55 +465,49 @@
     function buyItem(itemName, cost, type) {
         if (currentGold >= cost) {
             currentGold -= cost;
-            
-            if (type === 'reward') {
-                showToast(`🎉 <b>Compra Realizada!</b><br>Aproveite seu ${itemName} na vida real!`, 'success');
-            } else if (type === 'shield') {
-                shieldActive = true;
-                showToast(`🛡️ <b>Magia Ativada!</b><br>Escudo protege seu XP amanhã.`, 'success');
-            } else if (type === 'xp') {
-                doubleXpActive = true;
-                showToast(`🧪 <b>Magia Ativada!</b><br>XP Duplo garantido amanhã.`, 'success');
-            }
-            
-            saveProgress();
-            updateUI();
+            if (type === 'reward') showToast(`🎉 <b>Compra Realizada!</b><br>Aproveita o teu ${itemName} na vida real!`, 'success');
+            else if (type === 'shield') { shieldActive = true; showToast(`🛡️ <b>Magia Ativada!</b><br>Escudo protege o teu XP amanhã.`, 'success'); }
+            else if (type === 'xp') { doubleXpActive = true; showToast(`🧪 <b>Magia Ativada!</b><br>XP Duplo garantido amanhã.`, 'success'); }
+            saveProgress(); updateUI();
         } else {
-            showToast(`❌ <b>Ouro Insuficiente!</b><br>Faltam ${cost - currentGold} moedas para comprar [${itemName}].`, 'error');
+            showToast(`❌ <b>Ouro Insuficiente!</b><br>Faltam ${cost - currentGold} moedas para [${itemName}].`, 'error');
         }
     }
 
-    // --- SISTEMA DE CONQUISTAS ---
+    // --- CLASSES ---
+    function chooseClass(className) {
+        playerClass = className;
+        document.getElementById('class-modal').style.display = 'none';
+        showToast(`✨ <b>Classe Desbloqueada!</b><br>Agora és um bravo <b>${className}</b>!`, 'achievement');
+        saveProgress();
+        updateUI();
+    }
+
+    // --- CONQUISTAS E NÍVEIS ---
     function checkAchievements() {
-        if (!achievements.primeirosPassos && dayCount >= 1) {
-            achievements.primeirosPassos = true; showToast(`🏆 Conquista Desbloqueada:<br><b>Primeiros Passos</b>!`, 'achievement');
-        }
-        if (!achievements.inquebravel && consecutivePerfectDays >= 3) {
-            achievements.inquebravel = true; showToast(`🏆 Conquista Desbloqueada:<br><b>Inquebrável</b>!`, 'achievement');
-        }
-        if (!achievements.tioPatinhas && currentGold >= 50) {
-            achievements.tioPatinhas = true; showToast(`🏆 Conquista Desbloqueada:<br><b>Tio Patinhas</b>!`, 'achievement');
-        }
-        if (!achievements.ratoBiblioteca && consecutiveReadingDays >= 7) {
-            achievements.ratoBiblioteca = true; showToast(`🏆 Conquista Desbloqueada:<br><b>Rato de Biblioteca</b>!`, 'achievement');
-        }
+        if (!achievements.primeirosPassos && dayCount >= 1) { achievements.primeirosPassos = true; showToast(`🏆 Conquista Desbloqueada:<br><b>Primeiros Passos</b>!`, 'achievement'); }
+        if (!achievements.inquebravel && consecutivePerfectDays >= 3) { achievements.inquebravel = true; showToast(`🏆 Conquista Desbloqueada:<br><b>Inquebrável</b>!`, 'achievement'); }
+        if (!achievements.tioPatinhas && currentGold >= 50) { achievements.tioPatinhas = true; showToast(`🏆 Conquista Desbloqueada:<br><b>Tio Patinhas</b>!`, 'achievement'); }
+        if (!achievements.ratoBiblioteca && consecutiveReadingDays >= 7) { achievements.ratoBiblioteca = true; showToast(`🏆 Conquista Desbloqueada:<br><b>Rato de Biblioteca</b>!`, 'achievement'); }
     }
 
     function checkLevelUp() {
-        if (currentLevel < 10) {
+        if (currentLevel < MAX_LEVEL) {
             let nextLevelXp = levelThresholds[currentLevel];
-            while (currentXp >= nextLevelXp && currentLevel < 10) {
+            while (currentXp >= nextLevelXp && currentLevel < MAX_LEVEL) {
                 currentLevel++;
                 nextLevelXp = levelThresholds[currentLevel];
-                showToast(`🎉 <b>LEVEL UP!</b><br>Seu herói subiu para o Nível ${currentLevel}!`, 'achievement');
+                showToast(`🎉 <b>LEVEL UP!</b><br>O teu herói subiu para o Nível ${currentLevel}!`, 'achievement');
             }
+        }
+        if (currentLevel >= 7 && playerClass === 'Nenhuma') {
+            document.getElementById('class-modal').style.display = 'flex';
         }
     }
 
     function checkLevelDown() {
         if (currentLevel > 1 && currentXp < levelThresholds[currentLevel - 1]) {
-            currentLevel--;
-            showToast(`💀 <b>CUIDADO!</b><br>Você perdeu XP demais e regrediu para o Nível ${currentLevel}.`, 'error');
+            currentLevel--; showToast(`💀 <b>CUIDADO!</b><br>Perbeste XP a mais e regrediste para o Nível ${currentLevel}.`, 'error');
         }
     }
 
@@ -411,6 +516,7 @@
         localStorage.setItem('currentLevel', currentLevel);
         localStorage.setItem('currentGold', currentGold);
         localStorage.setItem('dayCount', dayCount);
+        localStorage.setItem('playerClass', playerClass);
         localStorage.setItem('consecPerfect', consecutivePerfectDays);
         localStorage.setItem('consecReading', consecutiveReadingDays);
         localStorage.setItem('shieldActive', shieldActive);
@@ -418,34 +524,34 @@
         localStorage.setItem('achievements', JSON.stringify(achievements));
         localStorage.setItem('daysLabels', JSON.stringify(daysLabels));
         localStorage.setItem('xpData', JSON.stringify(xpData));
+        localStorage.setItem('bonusQuests', JSON.stringify(bonusQuests));
     }
 
-    function resetCheckboxes() {
-        for(let i=1; i<=7; i++) document.getElementById('quest'+i).checked = false;
-    }
+    function resetCheckboxes() { for(let i=1; i<=7; i++) document.getElementById('quest'+i).checked = false; }
 
     function updateUI() {
-        document.getElementById('level-text').innerText = 'Nível ' + currentLevel;
-        let xpForNextLevel = currentLevel === 10 ? currentXp : levelThresholds[currentLevel];
+        let classDisplay = playerClass !== 'Nenhuma' ? ` - ${playerClass}` : '';
+        document.getElementById('level-text').innerText = 'Nível ' + currentLevel + classDisplay;
+        
+        let xpForNextLevel = currentLevel === MAX_LEVEL ? currentXp : levelThresholds[currentLevel];
         let xpForCurrentLevel = levelThresholds[currentLevel - 1];
         
-        document.getElementById('xp-text').innerText = currentLevel === 10 ? `XP: ${currentXp} (MÁXIMO)` : `XP: ${currentXp} / ${xpForNextLevel}`;
-        let progress = currentLevel === 10 ? 100 : ((currentXp - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100;
+        document.getElementById('xp-text').innerText = currentLevel === MAX_LEVEL ? `XP: ${currentXp} (NÍVEL MÁXIMO)` : `XP: ${currentXp} / ${xpForNextLevel}`;
+        let progress = currentLevel === MAX_LEVEL ? 100 : ((currentXp - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100;
         document.getElementById('xp-bar').style.width = progress + '%';
-        document.getElementById('xp-bar').style.backgroundColor = currentLevel === 10 ? '#FFD700' : '#4CAF50';
+        document.getElementById('xp-bar').style.backgroundColor = currentLevel === MAX_LEVEL ? '#FFD700' : '#4CAF50';
 
         document.getElementById('gold-count').innerText = currentGold;
 
-        // Atualizar visual das conquistas
         if (achievements.primeirosPassos) document.getElementById('ach-primeirosPassos').classList.add('unlocked');
         if (achievements.inquebravel) document.getElementById('ach-inquebravel').classList.add('unlocked');
         if (achievements.tioPatinhas) document.getElementById('ach-tioPatinhas').classList.add('unlocked');
         if (achievements.ratoBiblioteca) document.getElementById('ach-ratoBiblioteca').classList.add('unlocked');
 
-        // Mostrar texto de Buffs ativos
         let buffText = [];
         if (shieldActive) buffText.push('🛡️ Escudo Ativo');
         if (doubleXpActive) buffText.push('🧪 XP Duplo Ativo');
+        if (playerClass !== 'Nenhuma') buffText.push(`✨ Especialista: ${playerClass}`);
         document.getElementById('active-buffs').innerText = buffText.length > 0 ? buffText.join(' | ') : '';
     }
 
@@ -456,12 +562,19 @@
     }
 
     function resetGame() {
-        if (confirm("Você vai apagar TUDO (Nível, Ouro, Conquistas). Tem certeza?")) {
+        if (confirm("Vais apagar TUDO (Nível, Classes, Missões Bónus, Ouro, Conquistas). Tens a certeza?")) {
             localStorage.clear(); location.reload();
         }
     }
 
-    updateUI(); updateChart();
+    // Inicialização
+    updateUI(); 
+    updateChart();
+    renderBonusQuests();
+    
+    if (currentLevel >= 7 && playerClass === 'Nenhuma') {
+        document.getElementById('class-modal').style.display = 'flex';
+    }
 </script>
 </body>
 </html>
