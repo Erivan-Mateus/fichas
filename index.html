@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Flame, Star, CheckCircle2, Circle, Plus, X, Trophy, BookOpen,
   Target, User, TrendingUp, Trash2, Swords, ShieldHalf, Coins, Lock,
-  Zap, FlaskConical, Dices, Gem, ScrollText, Sparkles, Crown
+  Zap, FlaskConical, Dices, Gem, ScrollText, Sparkles, Crown, Library
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -116,6 +116,33 @@ const TITLES_LIST = [
   { level: 50, name: "Lenda dos Aventureiros", tier: "lendas" },
 ];
 
+/* ---------------------------------------------------------------------- */
+/* Biblioteca de Saberes — categorias fixas + subcategorias                */
+/* ---------------------------------------------------------------------- */
+
+const KNOWLEDGE_CATEGORIES = [
+  { key: "Raciocínio", emoji: "🧠", color: "var(--teal)", subcategories: ["Falácias", "Vieses", "Probabilidade", "Pensamento crítico", "Tomada de decisão"] },
+  { key: "Linguística", emoji: "🗣️", color: "var(--plum)", subcategories: ["Metáforas", "Retórica", "Pragmática", "Etimologia", "Comunicação"] },
+  { key: "Psicologia", emoji: "👥", color: "var(--sage)", subcategories: ["Psicologia social", "Cognição", "Motivação", "Hábitos", "Comportamento"] },
+  { key: "História", emoji: "🏛️", color: "var(--sand)", subcategories: ["Antiguidade", "Idade Média", "Idade Moderna", "Idade Contemporânea", "História do Brasil"] },
+  { key: "Geografia", emoji: "🌎", color: "var(--teal)", subcategories: ["Clima", "Geopolítica", "População", "Economia"] },
+  { key: "Ciência", emoji: "🔬", color: "var(--garnet)", subcategories: ["Física", "Química", "Biologia", "Astronomia"] },
+  { key: "Economia", emoji: "💰", color: "var(--gold)", subcategories: ["Inflação", "Juros", "Mercado", "Bancos", "Finanças"] },
+  { key: "Literatura", emoji: "📚", color: "var(--plum)", subcategories: ["Autores", "Obras", "Movimentos literários", "Gêneros"] },
+  { key: "Filosofia", emoji: "🏛️", color: "var(--sand)", subcategories: ["Estoicismo", "Ética", "Epistemologia", "Existencialismo"] },
+];
+
+function knowledgeCatInfo(key) {
+  return KNOWLEDGE_CATEGORIES.find((c) => c.key === key) || KNOWLEDGE_CATEGORIES[0];
+}
+
+// Recompensa por resumo criado: tier 1 = 20xp/5 ouro, tier 2 = 40xp/10 ouro, tier 3 = 60xp/15 ouro
+const SUMMARY_TIERS = [
+  { level: 1, label: "Resumo rápido", xp: 20, gold: 5 },
+  { level: 2, label: "Resumo elaborado", xp: 40, gold: 10 },
+  { level: 3, label: "Resumo aprofundado", xp: 60, gold: 15 },
+];
+
 const ACHIEVEMENTS = [
   { id: "primeiros-passos", emoji: "🪖", name: "Primeiros Passos", desc: "Complete sua primeira missão.", check: (d) => d.missions.reduce((s, m) => s + missionCompletionCount(m), 0) >= 1 },
   { id: "cacador-de-tarefas", emoji: "⚔️", name: "Caçador de Tarefas", desc: "Complete 25 missões.", check: (d) => d.missions.reduce((s, m) => s + missionCompletionCount(m), 0) >= 25 },
@@ -134,6 +161,8 @@ const ACHIEVEMENTS = [
   { id: "desafio-superado", emoji: "💪", name: "Desafio Superado", desc: "Complete uma missão de dificuldade máxima (⭐⭐⭐).", check: (d) => d.missions.some((m) => m.difficulty === 3 && missionCompletionCount(m) > 0) },
   { id: "dia-perfeito", emoji: "✅", name: "Dia Perfeito", desc: "Complete todas as missões diárias em um mesmo dia.", check: (d) => !!d.profile.everCompletedAllDailies },
   { id: "cronista", emoji: "📔", name: "Cronista do Explorador", desc: "Escreva 5 anotações no seu diário.", check: (d) => (d.diary || []).filter((e) => e.type === "manual").length >= 5 },
+  { id: "sabio-em-formacao", emoji: "📖", name: "Sábio em Formação", desc: "Crie 10 resumos na Biblioteca de Saberes.", check: (d) => (d.knowledgeSummaries || []).length >= 10 },
+  { id: "guardiao-do-saber", emoji: "🦉", name: "Guardião do Saber", desc: "Crie 50 resumos na Biblioteca de Saberes.", check: (d) => (d.knowledgeSummaries || []).length >= 50 },
 ];
 
 const DIFFICULTY_GOLD = { 1: 2, 2: 5, 3: 10 };
@@ -313,6 +342,7 @@ function seedData() {
     ],
     xpLog: [],
     diary: [],
+    knowledgeSummaries: [],
   };
 }
 
@@ -339,6 +369,7 @@ function normalizeData(loaded) {
     missions: loaded.missions || [],
     xpLog: loaded.xpLog || [],
     diary: loaded.diary || [],
+    knowledgeSummaries: loaded.knowledgeSummaries || [],
   };
 }
 
@@ -409,38 +440,36 @@ export default function GrowthQuestApp() {
   const [toast, setToast] = useState(null);
   const [showAddMission, setShowAddMission] = useState(false);
   const [showAddGoal, setShowAddGoal] = useState(false);
+  const [showAddSummary, setShowAddSummary] = useState(false);
   const [missionFilter, setMissionFilter] = useState({ type: "todas", category: "todas" });
+  const [summaryFilter, setSummaryFilter] = useState({ type: "todos", category: "todas" });
   const [saveError, setSaveError] = useState(false);
   const loadedRef = useRef(false);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await window.storage.get(STORAGE_KEY, false);
-        if (res && res.value) {
-          setData(normalizeData(JSON.parse(res.value)));
-        } else {
-          setData(seedData());
-        }
-      } catch (e) {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        setData(normalizeData(JSON.parse(raw)));
+      } else {
         setData(seedData());
-      } finally {
-        setLoading(false);
-        loadedRef.current = true;
       }
-    })();
+    } catch (e) {
+      setData(seedData());
+    } finally {
+      setLoading(false);
+      loadedRef.current = true;
+    }
   }, []);
 
   useEffect(() => {
     if (!loadedRef.current || !data) return;
-    (async () => {
-      try {
-        const res = await window.storage.set(STORAGE_KEY, JSON.stringify(data), false);
-        setSaveError(!res);
-      } catch (e) {
-        setSaveError(true);
-      }
-    })();
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      setSaveError(false);
+    } catch (e) {
+      setSaveError(true);
+    }
   }, [data]);
 
   function flashToast(msg) {
@@ -450,14 +479,16 @@ export default function GrowthQuestApp() {
 
   if (loading || !data) {
     return (
-      <div className="gq-root gq-loading">
+      <div className="gq-root">
         <style>{CSS}</style>
-        <div className="gq-loading-text">Abrindo o pergaminho…</div>
+        <div className="gq-inner gq-loading">
+          <div className="gq-loading-text">Abrindo o pergaminho…</div>
+        </div>
       </div>
     );
   }
 
-  const { profile, goals, missions, xpLog, diary } = data;
+  const { profile, goals, missions, xpLog, diary, knowledgeSummaries } = data;
   const levelInfo = computeLevel(profile.totalXp);
   const attrs = computeAttributes(missions, profile.attrBonus);
   const displayTitle = getDisplayTitle(profile, levelInfo.level);
@@ -472,7 +503,7 @@ export default function GrowthQuestApp() {
     });
   }
 
-  // adiciona XP, cuida do log e detecta level up (usado por missões e itens)
+  // adiciona XP, cuida do log e detecta level up (usado por missões, itens e resumos)
   function grantXp(next, amount) {
     const before = computeLevel(next.profile.totalXp).level;
     next.profile.totalXp += Math.round(amount);
@@ -673,6 +704,37 @@ export default function GrowthQuestApp() {
     update((next) => { next.diary = next.diary.filter((d) => d.id !== id); });
   }
 
+  // --- Biblioteca de Saberes ---
+  function addSummary(form) {
+    update((next) => {
+      const tierInfo = SUMMARY_TIERS.find((t) => t.level === form.tier) || SUMMARY_TIERS[0];
+      const entry = {
+        id: uid(),
+        title: form.title,
+        type: form.type, // "livro" | "avulso"
+        author: form.type === "livro" ? form.author : "",
+        tags: form.tags, // [{ category, subcategory }]
+        content: form.content,
+        tier: tierInfo.level,
+        date: todayStr(),
+      };
+      if (!next.knowledgeSummaries) next.knowledgeSummaries = [];
+      next.knowledgeSummaries.unshift(entry);
+
+      grantXp(next, tierInfo.xp);
+      next.profile.gold += tierInfo.gold;
+      next.profile.totalGoldEarned = (next.profile.totalGoldEarned || 0) + tierInfo.gold;
+
+      addDiaryEntry(next, { icon: "📚", text: `Novo saber registrado: ${entry.title}` });
+    });
+    setShowAddSummary(false);
+    flashToast("📚 Resumo salvo na Biblioteca de Saberes!");
+  }
+
+  function deleteSummary(id) {
+    update((next) => { next.knowledgeSummaries = (next.knowledgeSummaries || []).filter((s) => s.id !== id); });
+  }
+
   function resetAll() {
     if (window.confirm("Isso vai apagar todo o seu progresso salvo. Tem certeza?")) {
       setData(seedData());
@@ -682,6 +744,12 @@ export default function GrowthQuestApp() {
   const filteredMissions = missions.filter((m) => {
     if (missionFilter.type !== "todas" && m.type !== missionFilter.type) return false;
     if (missionFilter.category !== "todas" && m.category !== missionFilter.category) return false;
+    return true;
+  });
+
+  const filteredSummaries = (knowledgeSummaries || []).filter((s) => {
+    if (summaryFilter.type !== "todos" && s.type !== summaryFilter.type) return false;
+    if (summaryFilter.category !== "todas" && !(s.tags || []).some((t) => t.category === summaryFilter.category)) return false;
     return true;
   });
 
@@ -712,6 +780,7 @@ export default function GrowthQuestApp() {
   return (
     <div className="gq-root">
       <style>{CSS}</style>
+      <div className="gq-inner">
 
       {levelUp && <div className="gq-levelup"><Swords size={18} /> Nível {levelUp} alcançado!</div>}
       {toast && <div className="gq-toast">{toast}</div>}
@@ -756,6 +825,7 @@ export default function GrowthQuestApp() {
         <TabButton active={tab === "loja"} onClick={() => setTab("loja")} icon={<Coins size={15} />} label="Loja" />
         <TabButton active={tab === "conquistas"} onClick={() => setTab("conquistas")} icon={<Trophy size={15} />} label="Conquistas" />
         <TabButton active={tab === "diario"} onClick={() => setTab("diario")} icon={<BookOpen size={15} />} label="Diário" />
+        <TabButton active={tab === "biblioteca"} onClick={() => setTab("biblioteca")} icon={<Library size={15} />} label="Biblioteca" />
         <TabButton active={tab === "progresso"} onClick={() => setTab("progresso")} icon={<TrendingUp size={15} />} label="Progresso" />
       </div>
 
@@ -1120,6 +1190,37 @@ export default function GrowthQuestApp() {
         </div>
       )}
 
+      {/* ---------- BIBLIOTECA DE SABERES ---------- */}
+      {tab === "biblioteca" && (
+        <div>
+          <div className="gq-section-head">
+            <h2 className="gq-h2">Biblioteca de Saberes</h2>
+            <button className="gq-btn-primary" onClick={() => setShowAddSummary((s) => !s)}><Plus size={15} /> Novo saber</button>
+          </div>
+          <p className="gq-empty" style={{ marginBottom: 16 }}>Registre resumos do que você estuda — livros ou conhecimentos avulsos — e organize-os por categoria. Cada resumo concede XP e ouro.</p>
+          {showAddSummary && <AddSummaryForm onSubmit={addSummary} onCancel={() => setShowAddSummary(false)} />}
+          <div className="gq-filters">
+            <select className="gq-select" value={summaryFilter.type} onChange={(e) => setSummaryFilter((f) => ({ ...f, type: e.target.value }))}>
+              <option value="todos">Todos os tipos</option>
+              <option value="livro">📕 Livros</option>
+              <option value="avulso">📝 Avulsos</option>
+            </select>
+            <select className="gq-select" value={summaryFilter.category} onChange={(e) => setSummaryFilter((f) => ({ ...f, category: e.target.value }))}>
+              <option value="todas">Todas as categorias</option>
+              {KNOWLEDGE_CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.emoji} {c.key}</option>)}
+            </select>
+          </div>
+          {filteredSummaries.length === 0 && !showAddSummary && (
+            <Panel><p className="gq-empty">{(knowledgeSummaries || []).length === 0 ? "Sua biblioteca está vazia. Comece registrando o primeiro resumo do que você estudou." : "Nenhum resumo encontrado com esse filtro."}</p></Panel>
+          )}
+          <div className="gq-grid-2">
+            {filteredSummaries.map((s) => (
+              <SummaryCard key={s.id} entry={s} onDelete={deleteSummary} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ---------- PROGRESSO ---------- */}
       {tab === "progresso" && (
         <div>
@@ -1163,6 +1264,7 @@ export default function GrowthQuestApp() {
       <div className="gq-footer">
         <span>{saveError ? "⚠️ não foi possível salvar agora — seu progresso segue nesta sessão" : "dados salvos automaticamente"}</span>
         <button className="gq-reset-link" onClick={resetAll}>reiniciar progresso</button>
+      </div>
       </div>
     </div>
   );
@@ -1278,12 +1380,168 @@ function DiaryForm({ onSubmit }) {
   );
 }
 
+/* --- Biblioteca de Saberes: formulário e card --- */
+
+function AddSummaryForm({ onSubmit, onCancel }) {
+  const [title, setTitle] = useState("");
+  const [type, setType] = useState("avulso"); // "avulso" | "livro"
+  const [author, setAuthor] = useState("");
+  const [content, setContent] = useState("");
+  const [tier, setTier] = useState(1);
+  const [tagCategory, setTagCategory] = useState(KNOWLEDGE_CATEGORIES[0].key);
+  const [tagSub, setTagSub] = useState(KNOWLEDGE_CATEGORIES[0].subcategories[0]);
+  const [tags, setTags] = useState([]);
+
+  const currentSubOptions = KNOWLEDGE_CATEGORIES.find((c) => c.key === tagCategory)?.subcategories || [];
+
+  function handleCategoryChange(key) {
+    setTagCategory(key);
+    const subs = KNOWLEDGE_CATEGORIES.find((c) => c.key === key)?.subcategories || [];
+    setTagSub(subs[0] || "");
+  }
+
+  function addTag() {
+    if (!tagCategory || !tagSub) return;
+    if (tags.some((t) => t.category === tagCategory && t.subcategory === tagSub)) return;
+    setTags((t) => [...t, { category: tagCategory, subcategory: tagSub }]);
+  }
+
+  function removeTag(idx) {
+    setTags((t) => t.filter((_, i) => i !== idx));
+  }
+
+  const selectedTier = SUMMARY_TIERS.find((t) => t.level === tier) || SUMMARY_TIERS[0];
+  const canSubmit = title.trim() && content.trim() && tags.length > 0 && (type !== "livro" || author.trim());
+
+  return (
+    <Panel className="gq-form-panel">
+      <h3 className="gq-panel-title">Novo saber</h3>
+      <div className="gq-form-grid">
+        <label className="gq-field gq-field-wide"><span>Título</span><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Vieses cognitivos comuns" /></label>
+        <label className="gq-field"><span>Tipo</span>
+          <select value={type} onChange={(e) => setType(e.target.value)}>
+            <option value="avulso">Conhecimento avulso</option>
+            <option value="livro">Livro</option>
+          </select>
+        </label>
+        {type === "livro" ? (
+          <label className="gq-field"><span>Autor</span><input value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="Ex: Daniel Kahneman" /></label>
+        ) : (
+          <label className="gq-field"><span>Profundidade</span>
+            <select value={tier} onChange={(e) => setTier(Number(e.target.value))}>
+              {SUMMARY_TIERS.map((t) => <option key={t.level} value={t.level}>{t.label}</option>)}
+            </select>
+          </label>
+        )}
+        {type === "livro" && (
+          <label className="gq-field"><span>Profundidade</span>
+            <select value={tier} onChange={(e) => setTier(Number(e.target.value))}>
+              {SUMMARY_TIERS.map((t) => <option key={t.level} value={t.level}>{t.label}</option>)}
+            </select>
+          </label>
+        )}
+      </div>
+
+      <div className="gq-tag-builder">
+        <label className="gq-field"><span>Categoria</span>
+          <select value={tagCategory} onChange={(e) => handleCategoryChange(e.target.value)}>
+            {KNOWLEDGE_CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.emoji} {c.key}</option>)}
+          </select>
+        </label>
+        <label className="gq-field"><span>Subcategoria</span>
+          <select value={tagSub} onChange={(e) => setTagSub(e.target.value)}>
+            {currentSubOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </label>
+        <button type="button" className="gq-btn-ghost gq-tag-add-btn" onClick={addTag}><Plus size={13} /> Adicionar categoria</button>
+      </div>
+      <p className="gq-empty" style={{ marginTop: 6 }}>Um mesmo saber pode pertencer a várias categorias — adicione quantas fizerem sentido.</p>
+
+      {tags.length > 0 && (
+        <div className="gq-tag-chip-list">
+          {tags.map((t, i) => {
+            const cat = knowledgeCatInfo(t.category);
+            return (
+              <span key={i} className="gq-tag-chip" style={{ borderColor: cat.color, color: cat.color }}>
+                {cat.emoji} {t.category} · {t.subcategory}
+                <button type="button" onClick={() => removeTag(i)} aria-label="Remover categoria"><X size={11} /></button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      <label className="gq-field gq-field-wide" style={{ marginTop: 14 }}>
+        <span>Resumo</span>
+        <textarea className="gq-diary-textarea" rows={5} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Escreva aqui o resumo do que você estudou…" />
+      </label>
+
+      <p className="gq-mono gq-gold-preview"><Coins size={12} style={{ verticalAlign: "-2px" }} /> este resumo vai render +{selectedTier.xp} XP · +{selectedTier.gold} ouro</p>
+
+      <div className="gq-form-actions">
+        <button className="gq-btn-ghost" onClick={onCancel}><X size={14} /> Cancelar</button>
+        <button
+          className="gq-btn-primary"
+          disabled={!canSubmit}
+          onClick={() => onSubmit({ title: title.trim(), type, author: author.trim(), content: content.trim(), tier, tags })}
+        >
+          Salvar na biblioteca
+        </button>
+      </div>
+    </Panel>
+  );
+}
+
+function SummaryCard({ entry, onDelete }) {
+  const [expanded, setExpanded] = useState(false);
+  const tierInfo = SUMMARY_TIERS.find((t) => t.level === entry.tier) || SUMMARY_TIERS[0];
+  const isLong = entry.content.length > 220;
+  const preview = isLong && !expanded ? entry.content.slice(0, 220) + "…" : entry.content;
+
+  return (
+    <Panel>
+      <div className="gq-card-top">
+        <span className="gq-type-tag">{entry.type === "livro" ? "📕 Livro" : "📝 Avulso"}</span>
+        <button className="gq-icon-btn" onClick={() => onDelete(entry.id)} aria-label="Excluir resumo"><Trash2 size={14} /></button>
+      </div>
+      <h3 className="gq-card-title">{entry.title}</h3>
+      {entry.type === "livro" && entry.author && <p className="gq-mono gq-summary-author">por {entry.author}</p>}
+      <div className="gq-mission-tags" style={{ marginBottom: 10 }}>
+        {(entry.tags || []).map((t, i) => {
+          const cat = knowledgeCatInfo(t.category);
+          return (
+            <span key={i} className="gq-cat-tag" style={{ borderColor: cat.color, color: cat.color }}>
+              {cat.emoji} {t.category} · {t.subcategory}
+            </span>
+          );
+        })}
+      </div>
+      <p className="gq-card-desc" style={{ whiteSpace: "pre-wrap" }}>{preview}</p>
+      {isLong && (
+        <button className="gq-reset-link" style={{ marginTop: 2 }} onClick={() => setExpanded((e) => !e)}>
+          {expanded ? "ver menos" : "ver mais"}
+        </button>
+      )}
+      <div className="gq-goal-footer" style={{ marginTop: 10 }}>
+        <span className="gq-mono">{entry.date}</span>
+        <span className="gq-mono">+{tierInfo.xp} XP · +{tierInfo.gold} 🪙</span>
+      </div>
+    </Panel>
+  );
+}
+
 /* ---------------------------------------------------------------------- */
 /* Estilo                                                                 */
 /* ---------------------------------------------------------------------- */
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #12141c;
+}
 
 .gq-root {
   --bg: #12141c;
@@ -1306,15 +1564,19 @@ const CSS = `
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
-  padding: 20px;
-  border-radius: 6px;
-  max-width: 980px;
-  margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
   box-sizing: border-box;
 }
 .gq-root * { box-sizing: border-box; }
 
-.gq-loading { display:flex; align-items:center; justify-content:center; min-height: 200px; }
+.gq-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.gq-loading { display:flex; align-items:center; justify-content:center; min-height: 100vh; }
 .gq-loading-text { font-family: var(--font-display); color: var(--text-dim); letter-spacing: 0.05em; }
 
 .gq-panel { position: relative; background: var(--panel); border: 1px solid var(--panel-border); padding: 18px; margin-bottom: 14px; }
@@ -1470,6 +1732,13 @@ const CSS = `
 .gq-diary-date { font-size: 10px; color: var(--text-faint); }
 .gq-diary-textarea { width: 100%; background: var(--bg-alt); color: var(--text); border: 1px solid var(--panel-border); padding: 10px; font-size: 13px; font-family: var(--font-body); resize: vertical; }
 .gq-diary-textarea:focus { outline: none; border-color: var(--gold); }
+
+.gq-tag-builder { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-top: 4px; }
+.gq-tag-add-btn { height: 38px; white-space: nowrap; }
+.gq-tag-chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.gq-tag-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; border: 1px solid; padding: 4px 8px; background: var(--bg-alt); }
+.gq-tag-chip button { background: transparent; border: none; color: inherit; cursor: pointer; display: flex; padding: 0; }
+.gq-summary-author { font-size: 11px; color: var(--text-faint); margin: 0 0 8px 0; }
 
 .gq-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--panel-border); font-size: 11px; color: var(--text-faint); }
 .gq-reset-link { background: transparent; border: none; color: var(--text-faint); text-decoration: underline; cursor: pointer; font-size: 11px; }
