@@ -1,1659 +1,1477 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guia do Mundo — Bestiário & Enciclopédia</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0d0b08; --bg2: #141009; --bg3: #1c1610; --bg4: #231d14; --bg5: #2a2318;
-    --gold: #c8963c; --gold2: #e8b460; --gold3: #f5d080; --gold-dim: #7a5820;
-    --ink: #f0e6cc; --ink2: #c8b896; --ink3: #8c7a5a;
-    --red: #9c3a1e; --red2: #c44a28;
-    --teal: #1e6a5a; --teal2: #28907a;
-    --purple: #5a3a7a; --purple2: #7a52a8;
-    --amber: #7a4a10; --amber2: #c87830;
-    --blue: #1a3a5a; --blue2: #3a72a8;
-    --green: #1a5a2a; --green2: #2a8a3a;
-    --rose: #6a1a3a; --rose2: #a83a6a;
-    --border: rgba(200,150,60,0.25); --border2: rgba(200,150,60,0.5);
-    --radius: 6px; --shadow: 0 2px 24px rgba(0,0,0,0.6);
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Flame, Star, CheckCircle2, Circle, Plus, X, Trophy, BookOpen,
+  Target, User, TrendingUp, Trash2, Swords, ShieldHalf, Coins, Lock,
+  Zap, FlaskConical, Dices, Gem, ScrollText, Sparkles, Crown
+} from "lucide-react";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, BarChart, Bar
+} from "recharts";
+
+/* ---------------------------------------------------------------------- */
+/* Dados de referência                                                    */
+/* ---------------------------------------------------------------------- */
+
+const CATEGORIES = [
+  { key: "Estudos", emoji: "📚", color: "var(--teal)" },
+  { key: "Saúde", emoji: "💪", color: "var(--garnet)" },
+  { key: "Conhecimento", emoji: "🧠", color: "var(--teal)" },
+  { key: "Carreira", emoji: "💼", color: "var(--sand)" },
+  { key: "Finanças", emoji: "💰", color: "var(--sand)" },
+  { key: "Criatividade", emoji: "🎨", color: "var(--plum)" },
+  { key: "Social", emoji: "🤝", color: "var(--sage)" },
+  { key: "Mental", emoji: "🧘", color: "var(--gold)" },
+  { key: "Lazer", emoji: "🎮", color: "var(--sage)" },
+];
+
+const CATEGORY_ATTR = {
+  Estudos: "conhecimento",
+  Saúde: "saude",
+  Conhecimento: "conhecimento",
+  Carreira: "carreira",
+  Finanças: "carreira",
+  Criatividade: "criatividade",
+  Social: "social",
+  Mental: "disciplina",
+  Lazer: "social",
+};
+
+const ATTRIBUTES = [
+  { key: "conhecimento", label: "Conhecimento", emoji: "🧠", color: "var(--teal)" },
+  { key: "disciplina", label: "Disciplina", emoji: "⚔️", color: "var(--gold)" },
+  { key: "saude", label: "Saúde", emoji: "❤️", color: "var(--garnet)" },
+  { key: "criatividade", label: "Criatividade", emoji: "🎨", color: "var(--plum)" },
+  { key: "carreira", label: "Carreira", emoji: "💼", color: "var(--sand)" },
+  { key: "social", label: "Social", emoji: "🤝", color: "var(--sage)" },
+];
+
+const MISSION_TYPES = [
+  { key: "diaria", label: "Diária" },
+  { key: "semanal", label: "Semanal" },
+  { key: "unica", label: "Única" },
+  { key: "longa", label: "Longa" },
+];
+
+const TITLE_TIERS = [
+  { key: "novatos", emoji: "🪶", label: "Novatos", desc: "Primeiros passos na vida de aventureiro.", cost: 15 },
+  { key: "recrutas", emoji: "🗡️", label: "Recrutas", desc: "Já começaram a pegar trabalhos de verdade.", cost: 25 },
+  { key: "aprendizes", emoji: "📖", label: "Aprendizes", desc: "Começam a dominar suas habilidades.", cost: 40 },
+  { key: "aventureiros", emoji: "⚔️", label: "Aventureiros", desc: "Já são aventureiros reconhecidos.", cost: 60 },
+  { key: "exploradores", emoji: "🧭", label: "Exploradores", desc: "Poucos conseguem chegar tão longe.", cost: 80 },
+  { key: "grandes", emoji: "👑", label: "Grandes Aventureiros", desc: "Os feitos começam a virar histórias.", cost: 100 },
+  { key: "lendas", emoji: "🌟", label: "Lendas", desc: "Aqui o personagem já deixou de ser apenas uma pessoa.", cost: 150 },
+];
+
+const TITLES_LIST = [
+  { level: 1, name: "Pé de Chumbo", tier: "novatos" },
+  { level: 2, name: "Iniciante", tier: "novatos" },
+  { level: 3, name: "Pé-Quente", tier: "novatos" },
+  { level: 4, name: "Aventureiro Verde", tier: "novatos" },
+  { level: 5, name: "Desbravador", tier: "novatos" },
+  { level: 6, name: "Calouro", tier: "novatos" },
+  { level: 7, name: "Andarilho", tier: "novatos" },
+  { level: 8, name: "Pé na Estrada", tier: "novatos" },
+  { level: 9, name: "Recruta", tier: "recrutas" },
+  { level: 10, name: "Espadachim", tier: "recrutas" },
+  { level: 11, name: "Batedor", tier: "recrutas" },
+  { level: 12, name: "Caçador", tier: "recrutas" },
+  { level: 13, name: "Mercenário", tier: "recrutas" },
+  { level: 14, name: "Guardião", tier: "recrutas" },
+  { level: 15, name: "Combatente", tier: "recrutas" },
+  { level: 16, name: "Caça-Feras", tier: "recrutas" },
+  { level: 17, name: "Aprendiz de Aventureiro", tier: "aprendizes" },
+  { level: 18, name: "Discípulo", tier: "aprendizes" },
+  { level: 19, name: "Praticante", tier: "aprendizes" },
+  { level: 20, name: "Aspirante", tier: "aprendizes" },
+  { level: 21, name: "Iniciado", tier: "aprendizes" },
+  { level: 22, name: "Veterano Júnior", tier: "aprendizes" },
+  { level: 23, name: "Especialista", tier: "aprendizes" },
+  { level: 24, name: "Peregrino", tier: "aprendizes" },
+  { level: 25, name: "Aventureiro", tier: "aventureiros" },
+  { level: 26, name: "Veterano", tier: "aventureiros" },
+  { level: 27, name: "Caçador de Monstros", tier: "aventureiros" },
+  { level: 28, name: "Explorador de Masmorras", tier: "aventureiros" },
+  { level: 29, name: "Mercenário de Elite", tier: "aventureiros" },
+  { level: 30, name: "Campeão", tier: "aventureiros" },
+  { level: 31, name: "Desbravador de Fronteiras", tier: "aventureiros" },
+  { level: 32, name: "Mestre de Campo", tier: "aventureiros" },
+  { level: 33, name: "Explorador", tier: "exploradores" },
+  { level: 34, name: "Cartógrafo", tier: "exploradores" },
+  { level: 35, name: "Desbravador das Terras Distantes", tier: "exploradores" },
+  { level: 36, name: "Andarilho dos Confins", tier: "exploradores" },
+  { level: 37, name: "Explorador das Profundezas", tier: "exploradores" },
+  { level: 38, name: "Conquistador de Ruínas", tier: "exploradores" },
+  { level: 39, name: "Peregrino dos Mundos", tier: "exploradores" },
+  { level: 40, name: "Senhor das Fronteiras", tier: "exploradores" },
+  { level: 41, name: "Grande Aventureiro", tier: "grandes" },
+  { level: 42, name: "Mestre Aventureiro", tier: "grandes" },
+  { level: 43, name: "Campeão das Eras", tier: "grandes" },
+  { level: 44, name: "Herói das Fronteiras", tier: "grandes" },
+  { level: 45, name: "Conquistador", tier: "grandes" },
+  { level: 46, name: "Mestre dos Desafios", tier: "grandes" },
+  { level: 47, name: "Aventureiro Supremo", tier: "grandes" },
+  { level: 48, name: "Herói Lendário", tier: "lendas" },
+  { level: 49, name: "Lenda Viva", tier: "lendas" },
+  { level: 50, name: "Lenda dos Aventureiros", tier: "lendas" },
+];
+
+const ACHIEVEMENTS = [
+  { id: "primeiros-passos", emoji: "🪖", name: "Primeiros Passos", desc: "Complete sua primeira missão.", check: (d) => d.missions.reduce((s, m) => s + missionCompletionCount(m), 0) >= 1 },
+  { id: "cacador-de-tarefas", emoji: "⚔️", name: "Caçador de Tarefas", desc: "Complete 25 missões.", check: (d) => d.missions.reduce((s, m) => s + missionCompletionCount(m), 0) >= 25 },
+  { id: "veterano-de-missoes", emoji: "🛡️", name: "Veterano de Missões", desc: "Complete 100 missões.", check: (d) => d.missions.reduce((s, m) => s + missionCompletionCount(m), 0) >= 100 },
+  { id: "dedicacao", emoji: "🔥", name: "Dedicação", desc: "Alcance uma sequência de 7 dias.", check: (d) => d.profile.streak >= 7 },
+  { id: "inabalavel", emoji: "🔥", name: "Inabalável", desc: "Alcance uma sequência de 30 dias.", check: (d) => d.profile.streak >= 30 },
+  { id: "lenda-da-perseveranca", emoji: "🔥", name: "Lenda da Persistência", desc: "Alcance uma sequência de 100 dias.", check: (d) => d.profile.streak >= 100 },
+  { id: "subindo-de-nivel", emoji: "⭐", name: "Subindo de Nível", desc: "Alcance o nível 10.", check: (d) => computeLevel(d.profile.totalXp).level >= 10 },
+  { id: "meio-caminho", emoji: "🌠", name: "Meio Caminho Andado", desc: "Alcance o nível 25.", check: (d) => computeLevel(d.profile.totalXp).level >= 25 },
+  { id: "lenda-viva-conquista", emoji: "🌟", name: "Lenda Viva", desc: "Alcance o nível 50.", check: (d) => computeLevel(d.profile.totalXp).level >= 50 },
+  { id: "planejador", emoji: "🎯", name: "Planejador", desc: "Conclua sua primeira meta.", check: (d) => d.goals.some((g) => goalProgress(g, d.missions) >= 100) },
+  { id: "mestre-das-metas", emoji: "🏆", name: "Mestre das Metas", desc: "Conclua 5 metas.", check: (d) => d.goals.filter((g) => goalProgress(g, d.missions) >= 100).length >= 5 },
+  { id: "tesouro-acumulado", emoji: "💰", name: "Tesouro Acumulado", desc: "Acumule 1000 de ouro ao longo da jornada.", check: (d) => (d.profile.totalGoldEarned || 0) >= 1000 },
+  { id: "arvore-completa", emoji: "🌳", name: "Árvore Completa", desc: "Adquira todas as habilidades disponíveis.", check: (d) => d.profile.skills.length >= SKILLS.length },
+  { id: "colecionador", emoji: "🎒", name: "Colecionador", desc: "Use todos os tipos de item ao menos uma vez.", check: (d) => Object.keys(d.profile.itemsEverUsed || {}).length >= ITEMS.length },
+  { id: "desafio-superado", emoji: "💪", name: "Desafio Superado", desc: "Complete uma missão de dificuldade máxima (⭐⭐⭐).", check: (d) => d.missions.some((m) => m.difficulty === 3 && missionCompletionCount(m) > 0) },
+  { id: "dia-perfeito", emoji: "✅", name: "Dia Perfeito", desc: "Complete todas as missões diárias em um mesmo dia.", check: (d) => !!d.profile.everCompletedAllDailies },
+  { id: "cronista", emoji: "📔", name: "Cronista do Explorador", desc: "Escreva 5 anotações no seu diário.", check: (d) => (d.diary || []).filter((e) => e.type === "manual").length >= 5 },
+];
+
+const DIFFICULTY_GOLD = { 1: 2, 2: 5, 3: 10 };
+const TYPE_GOLD_BONUS = { diaria: 1, semanal: 2, unica: 5, longa: 10 };
+
+function goldForMission(m) {
+  return (DIFFICULTY_GOLD[m.difficulty] || 0) + (TYPE_GOLD_BONUS[m.type] || 0);
+}
+
+const SKILLS = [
+  { key: "aprendizado-rapido", name: "Aprendizado Rápido", emoji: "🧠", cost: 150, desc: "Aumenta em 10% o XP recebido por missões de Estudos e Conhecimento." },
+  { key: "segundo-folego", name: "Segundo Fôlego", emoji: "⚡", cost: 200, desc: "Uma vez por semana, recupere uma sequência perdida sem quebrar o streak.", active: true },
+  { key: "mao-de-ouro", name: "Mão de Ouro", emoji: "💰", cost: 250, desc: "+10% de ouro recebido em todas as missões." },
+  { key: "disciplina-skill", name: "Disciplina", emoji: "🔥", cost: 300, desc: "Ao completar todas as missões diárias do dia, recebe +20 XP bônus." },
+  { key: "foco-absoluto", name: "Foco Absoluto", emoji: "🎯", cost: 500, desc: "Ao completar uma missão ⭐⭐⭐, recebe +25% de XP adicional." },
+];
+
+const ITEMS = [
+  { key: "pocao-xp", name: "Poção de XP", emoji: "🧪", icon: FlaskConical, price: 100, desc: "A próxima missão concluída concede +50% de XP.", usable: true },
+  { key: "chama-persistencia", name: "Chama da Persistência", emoji: "🔥", icon: Flame, price: 150, desc: "Protege sua sequência por 1 dia caso você não complete nenhuma missão. Consumida automaticamente quando necessário.", usable: false },
+  { key: "dado-destino", name: "Dado do Destino", emoji: "🎲", icon: Dices, price: 200, desc: "Sua próxima missão concede entre 50% e 200% do ouro normal.", usable: true },
+  { key: "pergaminho-conhecimento", name: "Pergaminho do Conhecimento", emoji: "📜", icon: ScrollText, price: 300, desc: "Adiciona uma pequena quantidade de XP diretamente ao atributo Conhecimento.", usable: true },
+  { key: "cristal-evolucao", name: "Cristal da Evolução", emoji: "💎", icon: Gem, price: 500, desc: "Concede um grande bônus de XP. Só pode ser usado uma vez por semana.", usable: true, weeklyLimited: true },
+];
+
+/* ---------------------------------------------------------------------- */
+/* Helpers                                                                */
+/* ---------------------------------------------------------------------- */
+
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function addDays(dateStr, delta) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + delta);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+}
+
+function daysBetween(a, b) {
+  const [ay, am, ad] = a.split("-").map(Number);
+  const [by, bm, bd] = b.split("-").map(Number);
+  const da = new Date(ay, am - 1, ad);
+  const db = new Date(by, bm - 1, bd);
+  return Math.round((db - da) / 86400000);
+}
+
+function weekKey(d = new Date()) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = (date.getUTCDay() + 6) % 7;
+  date.setUTCDate(date.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+  const weekNum = 1 + Math.round(((date - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+  return `${date.getUTCFullYear()}-W${weekNum}`;
+}
+
+function xpForLevel(level) {
+  return 100 + (level - 1) * 45;
+}
+
+function computeLevel(totalXp) {
+  let level = 1, remaining = totalXp, needed = xpForLevel(level);
+  while (remaining >= needed) {
+    remaining -= needed;
+    level++;
+    needed = xpForLevel(level);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--ink); font-family: 'EB Garamond', Georgia, serif; font-size: 17px; min-height: 100vh; display: flex; flex-direction: column; }
-
-  /* HEADER */
-  header { background: linear-gradient(180deg,#0a0806 0%,var(--bg) 100%); border-bottom: 1px solid var(--border2); padding: 18px 32px 0; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(4px); }
-  .header-top { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
-  .logo-icon { width: 48px; height: 48px; border: 1.5px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--gold); background: var(--bg3); flex-shrink: 0; }
-  header h1 { font-family: 'Cinzel Decorative', serif; font-size: 22px; color: var(--gold3); letter-spacing: 0.04em; line-height: 1.2; }
-  header h1 span { display: block; font-family: 'Cinzel', serif; font-size: 12px; color: var(--ink3); font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; margin-top: 2px; }
-  .nav-tabs { display: flex; flex-wrap: wrap; gap: 2px; }
-  .tab-btn { background: none; border: none; border-bottom: 2px solid transparent; color: var(--ink3); font-family: 'Cinzel', serif; font-size: 11.5px; letter-spacing: 0.06em; padding: 7px 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
-  .tab-btn:hover { color: var(--gold2); }
-  .tab-btn.active { color: var(--gold3); border-bottom-color: var(--gold); }
-  .tab-btn .tab-count { background: var(--bg4); color: var(--ink3); font-size: 10px; padding: 1px 6px; border-radius: 99px; border: 1px solid var(--border); min-width: 20px; text-align: center; transition: all 0.2s; }
-  .tab-btn.active .tab-count { background: var(--gold-dim); color: var(--gold3); border-color: var(--gold); }
-
-  /* LAYOUT */
-  .app-body { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 120px); }
-
-  /* SIDEBAR */
-  .sidebar { width: 280px; min-width: 220px; max-width: 340px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; resize: horizontal; }
-  .sidebar-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; }
-  .search-box { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); color: var(--ink); font-family: 'EB Garamond', serif; font-size: 15px; padding: 7px 12px; outline: none; transition: border-color 0.2s; }
-  .search-box:focus { border-color: var(--gold-dim); }
-  .search-box::placeholder { color: var(--ink3); }
-  .btn-add { background: var(--gold-dim); border: 1px solid var(--gold); border-radius: var(--radius); color: var(--gold3); font-size: 20px; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
-  .btn-add:hover { background: var(--gold); color: var(--bg); }
-  .entry-list { flex: 1; overflow-y: auto; padding: 8px 0; scrollbar-width: thin; scrollbar-color: var(--bg4) transparent; }
-  .entry-item { padding: 10px 16px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.15s; display: flex; align-items: flex-start; gap: 10px; }
-  .entry-item:hover { background: var(--bg3); }
-  .entry-item.active { background: var(--bg4); border-left-color: var(--gold); }
-  .entry-thumb { width: 36px; height: 36px; border-radius: 4px; background: var(--bg4); border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--ink3); }
-  .entry-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .entry-info { flex: 1; min-width: 0; }
-  .entry-name { font-family: 'Cinzel', serif; font-size: 13px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .entry-sub { font-size: 12px; color: var(--ink3); margin-top: 2px; display: flex; flex-wrap: wrap; gap: 4px; }
-  .empty-state { padding: 32px 16px; text-align: center; color: var(--ink3); font-style: italic; font-size: 15px; }
-
-  /* TAGS */
-  .tag { display: inline-block; background: var(--bg5); border: 1px solid var(--border); border-radius: 3px; font-size: 10px; padding: 1px 6px; color: var(--ink3); font-family: 'Cinzel', serif; letter-spacing: 0.04em; text-transform: uppercase; }
-  .tag.continent { border-color: var(--teal); color: var(--teal2); }
-  .tag.deity-sup { border-color: var(--gold); color: var(--gold2); }
-  .tag.deity-cont { border-color: var(--gold-dim); color: var(--gold); }
-  .tag.magic { border-color: var(--purple); color: var(--purple2); }
-  .tag.creature { border-color: var(--red); color: var(--red2); }
-  .tag.culture { border-color: var(--teal); color: var(--teal2); }
-  .tag.character { border-color: var(--blue); color: var(--blue2); }
-  .tag.city { border-color: var(--amber); color: var(--amber2); }
-  .tag.era { border-color: #5a3a6a; color: #9a6ac8; }
-  /* NEW CATEGORIES */
-  .tag.artifact { border-color: var(--gold2); color: var(--gold3); }
-  .tag.faction { border-color: var(--rose); color: var(--rose2); }
-  .tag.language { border-color: var(--teal2); color: #5adaaa; }
-  .tag.event { border-color: var(--red2); color: #f07050; }
-  .tag.flora { border-color: var(--green); color: var(--green2); }
-
-  /* DETAIL */
-  .detail-panel { flex: 1; overflow-y: auto; padding: 28px 32px; scrollbar-width: thin; scrollbar-color: var(--bg4) transparent; }
-  .detail-welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 400px; text-align: center; color: var(--ink3); }
-  .detail-welcome .big-rune { font-size: 64px; margin-bottom: 16px; opacity: 0.3; }
-  .detail-welcome h2 { font-family: 'Cinzel Decorative', serif; font-size: 18px; color: var(--gold-dim); margin-bottom: 8px; }
-  .detail-welcome p { font-size: 15px; font-style: italic; }
-  .entry-detail { max-width: 720px; }
-  .detail-hero { display: flex; gap: 24px; margin-bottom: 28px; align-items: flex-start; }
-  .detail-image-box { width: 160px; height: 160px; border-radius: var(--radius); background: var(--bg3); border: 1px solid var(--border2); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 56px; color: var(--ink3); position: relative; cursor: pointer; }
-  .detail-image-box img { width: 100%; height: 100%; object-fit: cover; }
-  .img-upload-hint { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--gold3); font-size: 11px; text-align: center; padding: 4px; font-family: 'Cinzel', serif; opacity: 0; transition: opacity 0.2s; letter-spacing: 0.05em; }
-  .detail-image-box:hover .img-upload-hint { opacity: 1; }
-  .detail-meta { flex: 1; }
-  .detail-title { font-family: 'Cinzel Decorative', serif; font-size: 26px; color: var(--gold3); line-height: 1.2; margin-bottom: 8px; }
-  .detail-subtitle { font-family: 'Cinzel', serif; font-size: 14px; color: var(--ink3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
-  .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-
-  /* BUTTONS */
-  .btn { border-radius: var(--radius); font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.06em; padding: 7px 16px; cursor: pointer; transition: all 0.2s; border: 1px solid; display: flex; align-items: center; gap: 6px; }
-  .btn-gold { background: var(--gold-dim); border-color: var(--gold); color: var(--gold3); }
-  .btn-gold:hover { background: var(--gold); color: var(--bg); }
-  .btn-ghost { background: transparent; border-color: var(--border2); color: var(--ink2); }
-  .btn-ghost:hover { border-color: var(--gold-dim); color: var(--gold2); }
-  .btn-danger { background: transparent; border-color: rgba(156,58,30,0.5); color: var(--red2); }
-  .btn-danger:hover { background: var(--red); border-color: var(--red); color: var(--ink); }
-
-  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-  .section-label { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 10px; }
-  .detail-desc { font-size: 17px; line-height: 1.75; color: var(--ink2); white-space: pre-wrap; }
-  .detail-desc-placeholder { font-style: italic; color: var(--ink3); font-size: 16px; }
-  .ornament { text-align: center; color: var(--gold-dim); font-size: 20px; letter-spacing: 8px; margin: 16px 0; opacity: 0.6; }
-
-  /* ERA TIMELINE */
-  .era-timeline-bar { position: relative; margin: 24px 0 8px; height: 6px; background: var(--bg4); border-radius: 3px; border: 1px solid var(--border); }
-  .era-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold-dim), var(--gold2)); }
-  .era-labels { display: flex; justify-content: space-between; font-family: 'Cinzel', serif; font-size: 11px; color: var(--ink3); margin-top: 4px; }
-  .era-duration { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold2); margin-top: 6px; }
-
-  /* ATTR GRID */
-  .attr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
-  .attr-box { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; }
-  .attr-box .ab-label { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink3); margin-bottom: 4px; }
-  .attr-box .ab-value { font-size: 15px; color: var(--ink); }
-
-  /* LANGUAGE SAMPLE BOX */
-  .lang-sample-box { background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 14px 18px; margin-top: 12px; }
-  .lang-sample-box .ls-title { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 8px; }
-  .lang-sample-box .ls-words { display: flex; flex-wrap: wrap; gap: 8px; }
-  .lang-word { background: var(--bg4); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font-size: 14px; color: var(--ink2); font-style: italic; }
-
-  /* LINKS */
-  .links-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
-  .link-chip { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px; font-size: 13px; cursor: pointer; transition: all 0.15s; color: var(--ink2); }
-  .link-chip:hover { border-color: var(--gold-dim); color: var(--gold2); }
-  .link-chip .chip-remove { color: var(--ink3); font-size: 12px; margin-left: 4px; cursor: pointer; display: none; }
-  .link-chip:hover .chip-remove { display: inline; }
-  .link-chip .chip-remove:hover { color: var(--red2); }
-
-  /* MODAL */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center; padding: 20px; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); scrollbar-width: thin; scrollbar-color: var(--bg4) transparent; }
-  .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .modal-title { font-family: 'Cinzel Decorative', serif; font-size: 18px; color: var(--gold3); }
-  .modal-close { background: none; border: none; color: var(--ink3); font-size: 22px; cursor: pointer; line-height: 1; padding: 2px 6px; border-radius: 4px; transition: all 0.2s; }
-  .modal-close:hover { color: var(--ink); background: var(--bg4); }
-  .modal-body { padding: 20px 24px; }
-  .modal-footer { padding: 14px 24px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
-
-  /* FORM */
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 6px; }
-  .field input, .field select, .field textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); color: var(--ink); font-family: 'EB Garamond', serif; font-size: 16px; padding: 9px 13px; outline: none; transition: border-color 0.2s; }
-  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold-dim); }
-  .field select { -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a5820' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
-  .field option { background: var(--bg2); }
-  .field textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
-  .field-row { display: flex; gap: 12px; }
-  .field-row .field { flex: 1; }
-  .field-hint { font-size: 12px; color: var(--ink3); margin-top: 4px; font-style: italic; }
-
-  /* LINKS SELECTOR */
-  .links-selector { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); max-height: 150px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--bg4) transparent; }
-  .links-selector-item { padding: 7px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink2); transition: background 0.15s; }
-  .links-selector-item:hover { background: var(--bg4); }
-  .links-selector-item.checked { color: var(--gold2); }
-  .links-selector-item .check-icon { font-size: 13px; width: 16px; text-align: center; }
-
-  /* EXPORT */
-  .export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
-  .export-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; transition: all 0.2s; text-align: center; }
-  .export-card:hover { border-color: var(--gold-dim); }
-  .export-card .exp-icon { font-size: 28px; margin-bottom: 6px; }
-  .export-card .exp-title { font-family: 'Cinzel', serif; font-size: 13px; color: var(--ink2); margin-bottom: 4px; }
-  .export-card .exp-desc { font-size: 12px; color: var(--ink3); }
-
-  /* TOAST */
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg4); border: 1px solid var(--border2); border-radius: var(--radius); color: var(--gold2); font-family: 'Cinzel', serif; font-size: 13px; padding: 10px 18px; box-shadow: var(--shadow); z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; pointer-events: none; }
-  .toast.show { transform: translateY(0); opacity: 1; }
-
-  #image-file-input { display: none; }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
-
-  /* GALERIA DE IMAGENS */
-  .image-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-  .gallery-thumb { width: 90px; height: 90px; border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; position: relative; cursor: pointer; background: var(--bg3); flex-shrink: 0; }
-  .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.2s; }
-  .gallery-thumb:hover img { opacity: 0.7; }
-  .gallery-thumb-remove { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.75); color: #fff; border: none; border-radius: 3px; font-size: 12px; width: 20px; height: 20px; display: none; align-items: center; justify-content: center; cursor: pointer; line-height: 1; }
-  .gallery-thumb:hover .gallery-thumb-remove { display: flex; }
-  .gallery-thumb-add { width: 90px; height: 90px; border-radius: var(--radius); border: 2px dashed var(--border2); background: var(--bg3); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: var(--ink3); font-size: 11px; font-family: 'Cinzel', serif; letter-spacing: 0.05em; transition: all 0.2s; flex-shrink: 0; gap: 4px; }
-  .gallery-thumb-add:hover { border-color: var(--gold-dim); color: var(--gold2); background: var(--bg4); }
-  .gallery-thumb-add .add-icon { font-size: 22px; }
-  .gallery-main-box { width: 160px; height: 160px; border-radius: var(--radius); background: var(--bg3); border: 1px solid var(--border2); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 56px; color: var(--ink3); position: relative; cursor: pointer; }
-  .gallery-main-box img { width: 100%; height: 100%; object-fit: cover; }
-  .gallery-nav { position: absolute; bottom: 6px; left: 0; right: 0; display: flex; justify-content: center; gap: 4px; }
-  .gallery-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); border: none; cursor: pointer; padding: 0; transition: background 0.2s; }
-  .gallery-dot.active { background: var(--gold3); }
-  .gallery-arrows { position: absolute; top: 50%; transform: translateY(-50%); width: 100%; display: flex; justify-content: space-between; padding: 0 4px; pointer-events: none; }
-  .gallery-arrow { background: rgba(0,0,0,0.6); color: var(--gold3); border: none; border-radius: 3px; width: 22px; height: 22px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: all; opacity: 0; transition: opacity 0.2s; }
-  .gallery-main-box:hover .gallery-arrow { opacity: 1; }
-</style>
-</head>
-<body>
-
-<header>
-  <div class="header-top">
-    <div class="logo-icon">✦</div>
-    <h1 id="world-title-display">Guia do Mundo<span id="world-subtitle-display">Bestiário · Deuses · Culturas · Criaturas</span></h1>
-    <div style="margin-left:auto;display:flex;gap:8px;flex-shrink:0">
-      <button class="btn btn-ghost" onclick="openExport()">⬇ Exportar</button>
-      <button class="btn btn-ghost" onclick="openSettings()">⚙</button>
-    </div>
-  </div>
-  <nav class="nav-tabs">
-    <button class="tab-btn active" data-tab="all" onclick="switchTab('all',this)">✦ Tudo <span class="tab-count" id="count-all">0</span></button>
-    <button class="tab-btn" data-tab="deity-sup" onclick="switchTab('deity-sup',this)">☀ Deuses Sup. <span class="tab-count" id="count-deity-sup">0</span></button>
-    <button class="tab-btn" data-tab="deity-cont" onclick="switchTab('deity-cont',this)">⛰ Deuses Cont. <span class="tab-count" id="count-deity-cont">0</span></button>
-    <button class="tab-btn" data-tab="magic" onclick="switchTab('magic',this)">✦ Magias <span class="tab-count" id="count-magic">0</span></button>
-    <button class="tab-btn" data-tab="creature" onclick="switchTab('creature',this)">🐉 Criaturas <span class="tab-count" id="count-creature">0</span></button>
-    <button class="tab-btn" data-tab="culture" onclick="switchTab('culture',this)">🏛 Culturas <span class="tab-count" id="count-culture">0</span></button>
-    <button class="tab-btn" data-tab="continent" onclick="switchTab('continent',this)">🗺 Continentes <span class="tab-count" id="count-continent">0</span></button>
-    <button class="tab-btn" data-tab="city" onclick="switchTab('city',this)">🏙 Cidades <span class="tab-count" id="count-city">0</span></button>
-    <button class="tab-btn" data-tab="era" onclick="switchTab('era',this)">⏳ Eras <span class="tab-count" id="count-era">0</span></button>
-    <button class="tab-btn" data-tab="character" onclick="switchTab('character',this)">👤 Personagens <span class="tab-count" id="count-character">0</span></button>
-    <button class="tab-btn" data-tab="artifact" onclick="switchTab('artifact',this)">⚔ Artefatos <span class="tab-count" id="count-artifact">0</span></button>
-    <button class="tab-btn" data-tab="faction" onclick="switchTab('faction',this)">🛡 Facções <span class="tab-count" id="count-faction">0</span></button>
-    <button class="tab-btn" data-tab="language" onclick="switchTab('language',this)">📜 Línguas <span class="tab-count" id="count-language">0</span></button>
-    <button class="tab-btn" data-tab="event" onclick="switchTab('event',this)">⚡ Eventos <span class="tab-count" id="count-event">0</span></button>
-    <button class="tab-btn" data-tab="flora" onclick="switchTab('flora',this)">🌿 Fauna & Flora <span class="tab-count" id="count-flora">0</span></button>
-  </nav>
-</header>
-
-<div class="app-body">
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <input type="text" class="search-box" id="search-input" placeholder="Buscar entradas..." oninput="renderList()">
-      <button class="btn-add" onclick="openAddModal()" title="Nova entrada (Ctrl+N)">+</button>
-    </div>
-    <div class="entry-list" id="entry-list">
-      <div class="empty-state">Nenhuma entrada ainda.<br>Clique em + para começar.</div>
-    </div>
-  </div>
-
-  <div class="detail-panel" id="detail-panel">
-    <div class="detail-welcome" id="welcome-screen">
-      <div class="big-rune">✦</div>
-      <h2>O Livro Aguarda</h2>
-      <p>Selecione uma entrada ou crie uma nova<br>para começar a registrar os segredos do mundo.</p>
-    </div>
-    <div class="entry-detail" id="entry-detail" style="display:none"></div>
-  </div>
-</div>
-
-<!-- MODAL: NOVA / EDITAR ENTRADA -->
-<div class="modal-overlay" id="entry-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="modal-title-text">Nova Entrada</span>
-      <button class="modal-close" onclick="closeModal('entry-modal')">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label>Nome *</label>
-        <input type="text" id="f-name" placeholder="Nome da entrada...">
-      </div>
-      <div class="field">
-        <label>Categoria *</label>
-        <select id="f-cat" onchange="onCatChange()">
-          <option value="">— Selecionar —</option>
-          <option value="deity-sup">Deus Superior</option>
-          <option value="deity-cont">Deus Continental</option>
-          <option value="magic">Magia / Escola de Magia</option>
-          <option value="creature">Criatura</option>
-          <option value="culture">Cultura / Povo</option>
-          <option value="continent">Continente / Região</option>
-          <option value="city">Cidade / Localidade</option>
-          <option value="era">Era / Período</option>
-          <option value="character">Personagem Histórico</option>
-          <option value="artifact">Artefato / Relíquia</option>
-          <option value="faction">Facção / Organização</option>
-          <option value="language">Língua</option>
-          <option value="event">Evento / Batalha</option>
-          <option value="flora">Fauna / Flora</option>
-        </select>
-      </div>
-
-      <!-- Campos gerais (para categorias sem bloco próprio) -->
-      <div id="fields-general">
-        <div class="field">
-          <label>Subtipo</label>
-          <input type="text" id="f-subtype" placeholder="Ex: Deus da Guerra, Dragão Ancião, Capital...">
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Continente / Região</label>
-            <input type="text" id="f-continent-text" placeholder="Ex: Aethoria, Norte...">
-          </div>
-          <div class="field">
-            <label>Era</label>
-            <input type="text" id="f-era-text" placeholder="Ex: Era dos Deuses...">
-          </div>
-        </div>
-        <div class="field">
-          <label>Atributo extra</label>
-          <input type="text" id="f-attr" placeholder="Ex: Domínio, Porte, Escola, Linhagem...">
-        </div>
-      </div>
-
-      <!-- Campos específicos: CRIATURA -->
-      <div id="fields-creature" style="display:none">
-        <div class="field-row">
-          <div class="field">
-            <label>Subtipo</label>
-            <input type="text" id="f-creature-subtype" placeholder="Ex: Dragão, Morto-vivo, Elemental...">
-          </div>
-          <div class="field">
-            <label>Nível de Ameaça</label>
-            <select id="f-creature-danger">
-              <option value="">— Ameaça —</option>
-              <option value="Inofensiva">Inofensiva</option>
-              <option value="Baixa">Baixa</option>
-              <option value="Moderada">Moderada</option>
-              <option value="Alta">Alta</option>
-              <option value="Extrema">Extrema</option>
-              <option value="Lendária">Lendária / Catastrófica</option>
-            </select>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Habitat</label>
-            <input type="text" id="f-creature-habitat" placeholder="Ex: Florestas profundas, Cavernas, Mar aberto...">
-          </div>
-          <div class="field">
-            <label>Comportamento Social</label>
-            <select id="f-creature-behavior">
-              <option value="">— Comportamento —</option>
-              <option value="Solitária">Solitária</option>
-              <option value="Em pares">Em pares</option>
-              <option value="Gregária">Gregária / Em bando</option>
-              <option value="Eussocial">Eussocial (colmeia)</option>
-              <option value="Variável">Variável</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label>Fraquezas Conhecidas</label>
-          <input type="text" id="f-creature-weakness" placeholder="Ex: Prata, luz solar, fogo, certos encantamentos...">
-        </div>
-        <div class="field">
-          <label>Mitos & Lendas Associados</label>
-          <input type="text" id="f-creature-myths" placeholder="Ex: Diz-se que surgiu do sangue do deus Kael...">
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Região / Continente</label>
-            <input type="text" id="f-creature-region" placeholder="Ex: Norte de Aethoria...">
-          </div>
-          <div class="field">
-            <label>Era</label>
-            <input type="text" id="f-creature-era" placeholder="Ex: Pré-dilúvio, Era dos Reis...">
-          </div>
-        </div>
-      </div>
-
-      <!-- Campos específicos: DEUS (Superior e Continental) -->
-      <div id="fields-deity" style="display:none">
-        <div class="field-row">
-          <div class="field">
-            <label>Domínio / Esfera</label>
-            <input type="text" id="f-deity-domain" placeholder="Ex: Deus da Guerra e da Forja, Senhora das Marés...">
-          </div>
-          <div class="field">
-            <label>Região de culto</label>
-            <input type="text" id="f-deity-region" placeholder="Ex: Todo o continente, Apenas o Norte...">
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Símbolo Sagrado</label>
-            <input type="text" id="f-deity-symbol" placeholder="Ex: Martelo flamejante, Lua crescente...">
-          </div>
-          <div class="field">
-            <label>Animal / Planta Associada</label>
-            <input type="text" id="f-deity-totem" placeholder="Ex: Corvo, Carvalho, Serpente...">
-          </div>
-        </div>
-        <div class="field">
-          <label>Ritual de Culto Principal</label>
-          <input type="text" id="f-deity-ritual" placeholder="Ex: Sacrifício de gado no solstício, Banquete comunal às luas cheias...">
-        </div>
-        <div class="field">
-          <label>Clérigos / Templos Notáveis</label>
-          <input type="text" id="f-deity-temples" placeholder="Ex: Grande Templo de Valdur, Alta Sacerdotisa Maren...">
-        </div>
-        <div class="field">
-          <label>Relações com Outros Deuses</label>
-          <input type="text" id="f-deity-relations" placeholder="Ex: Rival de Kael (deus da morte), Aliado de Siel (deusa da vida)...">
-        </div>
-        <div class="field">
-          <label>Era</label>
-          <input type="text" id="f-deity-era" placeholder="Ex: Desde a Criação, Surgiu na Segunda Era...">
-        </div>
-      </div>
-
-      <!-- Campos específicos: CULTURA -->
-      <div id="fields-culture" style="display:none">
-        <div class="field-row">
-          <div class="field">
-            <label>Povo / Etnia</label>
-            <input type="text" id="f-culture-subtype" placeholder="Ex: Elfos das planícies, Humanos nórdicos...">
-          </div>
-          <div class="field">
-            <label>Região / Continente</label>
-            <input type="text" id="f-culture-region" placeholder="Ex: Norte de Aethoria, Vale de Vorn...">
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Sistema de Governo</label>
-            <select id="f-culture-gov">
-              <option value="">— Governo —</option>
-              <option value="Monarquia">Monarquia</option>
-              <option value="Oligarquia">Oligarquia / Conselho</option>
-              <option value="Teocracia">Teocracia</option>
-              <option value="Democracia">Democracia / República</option>
-              <option value="Anarquia">Anarquia / Tribal</option>
-              <option value="Matriarcado">Matriarcado</option>
-              <option value="Patriarcado">Patriarcado</option>
-              <option value="Meritocracia">Meritocracia</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Era</label>
-            <input type="text" id="f-culture-era" placeholder="Ex: Era dos Reis...">
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Religião Predominante</label>
-            <input type="text" id="f-culture-religion" placeholder="Ex: Culto ao deus Ignar, Politeísmo solar...">
-          </div>
-          <div class="field">
-            <label>Língua Falada</label>
-            <input type="text" id="f-culture-language" placeholder="Ex: Élfico antigo, Dialeto do Norte...">
-          </div>
-        </div>
-        <div class="field">
-          <label>Tradições Funerárias</label>
-          <input type="text" id="f-culture-funerary" placeholder="Ex: Cremação ao nascer do sol, Enterro em barcos no rio...">
-        </div>
-        <div class="field">
-          <label>Comércio Principal / Economia</label>
-          <input type="text" id="f-culture-trade" placeholder="Ex: Minério de ferro, especiarias, escravidão, pesca...">
-        </div>
-      </div>
-
-      <!-- Campos específicos: CIDADE -->
-      <div id="fields-city" style="display:none">
-        <div class="field-row">
-          <div class="field">
-            <label>Reino / Continente</label>
-            <input type="text" id="f-city-kingdom" placeholder="Ex: Reino de Valdur...">
-          </div>
-          <div class="field">
-            <label>Tipo</label>
-            <select id="f-city-type">
-              <option value="">— Tipo —</option>
-              <option value="Capital">Capital</option>
-              <option value="Cidade">Cidade</option>
-              <option value="Vila">Vila</option>
-              <option value="Porto">Porto</option>
-              <option value="Fortaleza">Fortaleza</option>
-              <option value="Ruínas">Ruínas</option>
-              <option value="Templo">Cidade-Templo</option>
-              <option value="Subterrânea">Cidade Subterrânea</option>
-              <option value="Flutuante">Cidade Flutuante</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Era / Período</label>
-            <input type="text" id="f-city-era" placeholder="Ex: Era dos Deuses...">
-          </div>
-          <div class="field">
-            <label>Status Atual</label>
-            <select id="f-city-status">
-              <option value="">— Status —</option>
-              <option value="Ativa">Ativa / Habitada</option>
-              <option value="Abandonada">Abandonada</option>
-              <option value="Destruída">Destruída</option>
-              <option value="Lendária">Lendária / Mítica</option>
-              <option value="Sitiada">Sitiada</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label>Governante / Facção</label>
-          <input type="text" id="f-city-ruler" placeholder="Ex: Rei Aldric, Guilda dos Magos...">
-        </div>
-        <div class="field">
-          <label>População estimada</label>
-          <input type="text" id="f-city-pop" placeholder="Ex: ~50.000 habitantes, Desconhecida...">
-        </div>
-      </div>
-
-      <!-- Campos específicos: ERA -->
-      <div id="fields-era" style="display:none">
-        <div class="field-row">
-          <div class="field">
-            <label>Ano de Início</label>
-            <input type="text" id="f-era-start" placeholder="Ex: 0, -500, Era Antiga...">
-          </div>
-          <div class="field">
-            <label>Ano de Fim</label>
-            <input type="text" id="f-era-end" placeholder="Ex: 800, Presente, Em curso...">
-          </div>
-        </div>
-        <div class="field">
-          <label>Evento que iniciou esta Era</label>
-          <input type="text" id="f-era-start-event" placeholder="Ex: A Grande Ruptura, Ascensão do Primeiro Rei...">
-        </div>
-        <div class="field">
-          <label>Evento que encerrou esta Era</label>
-          <input type="text" id="f-era-end-event" placeholder="Ex: A Queda dos Deuses...">
-        </div>
-        <div class="field">
-          <label>Tom / Característica central</label>
-          <input type="text" id="f-era-tone" placeholder="Ex: Era de ouro, Período de guerras...">
-        </div>
-      </div>
-
-      <!-- Campos específicos: ARTEFATO -->
-      <div id="fields-artifact" style="display:none">
-        <div class="field-row">
-          <div class="field">
-            <label>Tipo de Artefato</label>
-            <select id="f-artifact-type">
-              <option value="">— Tipo —</option>
-              <option value="Arma">Arma</option>
-              <option value="Armadura">Armadura</option>
-              <option value="Joia">Joia / Amuleto</option>
-              <option value="Grimório">Grimório / Tomo</option>
-              <option value="Orbe">Orbe / Cristal</option>
-              <option value="Reliquia">Relíquia Sagrada</option>
-              <option value="Instrumento">Instrumento</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Status / Localização</label>
-            <select id="f-artifact-status">
-              <option value="">— Status —</option>
-              <option value="Ativo">Ativo / Em uso</option>
-              <option value="Perdido">Perdido</option>
-              <option value="Destruído">Destruído</option>
-              <option value="Selado">Selado / Aprisionado</option>
-              <option value="Lendário">Apenas Lendário</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label>Criador / Origem</label>
-          <input type="text" id="f-artifact-creator" placeholder="Ex: Forjado por Deus Ignar, Criado pela Ordem dos Selos...">
-        </div>
-        <div class="field">
-          <label>Localização atual</label>
-          <input type="text" id="f-artifact-location" placeholder="Ex: Tesouro do Rei, Perdido nas Ruínas de Aldur...">
-        </div>
-        <div class="field">
-          <label>Poder / Propriedade</label>
-          <input type="text" id="f-artifact-power" placeholder="Ex: Consome a alma do portador, Concede visão profética...">
-        </div>
-      </div>
-
-      <!-- Campos específicos: FACÇÃO -->
-      <div id="fields-faction" style="display:none">
-        <div class="field-row">
-          <div class="field">
-            <label>Tipo de Organização</label>
-            <select id="f-faction-type">
-              <option value="">— Tipo —</option>
-              <option value="Guilda">Guilda</option>
-              <option value="Ordem">Ordem Militar / Cavaleiresca</option>
-              <option value="Culto">Culto / Seita</option>
-              <option value="Governo">Governo / Nobreza</option>
-              <option value="Mercenários">Mercenários</option>
-              <option value="Academia">Academia / Escola</option>
-              <option value="Seita Secreta">Seita Secreta</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Alinhamento</label>
-            <select id="f-faction-align">
-              <option value="">— Alinhamento —</option>
-              <option value="Lei">Leal / Lei</option>
-              <option value="Neutro">Neutro</option>
-              <option value="Caos">Caótico</option>
-              <option value="Bem">Bem</option>
-              <option value="Mal">Mal</option>
-              <option value="Ambíguo">Ambíguo</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label>Símbolo / Estandarte</label>
-          <input type="text" id="f-faction-symbol" placeholder="Ex: Três chamas sobre escudo negro, Serpente ouroboros...">
-        </div>
-        <div class="field">
-          <label>Líder / Hierarquia</label>
-          <input type="text" id="f-faction-leader" placeholder="Ex: Grande Mestre Aldric, Conselho dos Cinco...">
-        </div>
-        <div class="field">
-          <label>Agenda / Objetivo</label>
-          <input type="text" id="f-faction-agenda" placeholder="Ex: Ressuscitar o deus morto, Controlar o comércio...">
-        </div>
-        <div class="field">
-          <label>Cidades / Territórios de atuação</label>
-          <input type="text" id="f-faction-cities" placeholder="Ex: Valdur, Porto Nórdico, Todo o continente norte...">
-        </div>
-      </div>
-
-      <!-- Campos específicos: LÍNGUA -->
-      <div id="fields-language" style="display:none">
-        <div class="field-row">
-          <div class="field">
-            <label>Família Linguística</label>
-            <input type="text" id="f-lang-family" placeholder="Ex: Línguas élfica, Proto-humano...">
-          </div>
-          <div class="field">
-            <label>Script / Escrita</label>
-            <input type="text" id="f-lang-script" placeholder="Ex: Rúnico, Silábico, Sem escrita...">
-          </div>
-        </div>
-        <div class="field">
-          <label>Povo(s) que falam</label>
-          <input type="text" id="f-lang-speakers" placeholder="Ex: Elfos das montanhas, Humanos do norte...">
-        </div>
-        <div class="field">
-          <label>Origem / História</label>
-          <input type="text" id="f-lang-origin" placeholder="Ex: Derivada do idioma divino na Segunda Era...">
-        </div>
-        <div class="field">
-          <label>Palavras-chave (separadas por vírgula)</label>
-          <input type="text" id="f-lang-words" placeholder="Ex: Aethar=céu, Vorn=guerra, Siel=alma...">
-          <div class="field-hint">Formato: palavra=tradução, palavra=tradução</div>
-        </div>
-      </div>
-
-      <!-- Campos específicos: EVENTO -->
-      <div id="fields-event" style="display:none">
-        <div class="field-row">
-          <div class="field">
-            <label>Tipo de Evento</label>
-            <select id="f-event-type">
-              <option value="">— Tipo —</option>
-              <option value="Batalha">Batalha / Guerra</option>
-              <option value="Catástrofe">Catástrofe Natural</option>
-              <option value="Ascensão">Ascensão / Queda</option>
-              <option value="Profecia">Profecia Cumprida</option>
-              <option value="Descoberta">Descoberta / Invenção</option>
-              <option value="Acordo">Acordo / Tratado</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Data / Período</label>
-            <input type="text" id="f-event-date" placeholder="Ex: Ano 340 da Era dos Reis, ~500 A.E...">
-          </div>
-        </div>
-        <div class="field">
-          <label>Causa</label>
-          <input type="text" id="f-event-cause" placeholder="Ex: Assassinato do rei, Despertar do deus antigo...">
-        </div>
-        <div class="field">
-          <label>Consequência</label>
-          <input type="text" id="f-event-consequence" placeholder="Ex: Dividiu o continente em dois reinos, Extinguiu os dragões...">
-        </div>
-        <div class="field">
-          <label>Localização</label>
-          <input type="text" id="f-event-location" placeholder="Ex: Planícies de Valdur, Mar Interior...">
-        </div>
-      </div>
-
-      <!-- Campos específicos: FAUNA/FLORA -->
-      <div id="fields-flora" style="display:none">
-        <div class="field-row">
-          <div class="field">
-            <label>Tipo</label>
-            <select id="f-flora-type">
-              <option value="">— Tipo —</option>
-              <option value="Animal">Animal / Fauna</option>
-              <option value="Planta">Planta / Flora</option>
-              <option value="Fungo">Fungo / Musgo</option>
-              <option value="Aquático">Aquático</option>
-              <option value="Inseto">Inseto / Artrópode</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Habitat</label>
-            <input type="text" id="f-flora-habitat" placeholder="Ex: Florestas do norte, Deserto, Montanhas...">
-          </div>
-        </div>
-        <div class="field">
-          <label>Uso / Importância cultural</label>
-          <input type="text" id="f-flora-use" placeholder="Ex: Alimento, Medicinal, Montaria, Veneno, Ritual...">
-        </div>
-        <div class="field">
-          <label>Características notáveis</label>
-          <input type="text" id="f-flora-traits" placeholder="Ex: Folhas bioluminescentes, Migra pelo solstício...">
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Descrição</label>
-        <textarea id="f-desc" placeholder="Descreva esta entrada com detalhes, história, lendas..."></textarea>
-      </div>
-
-      <div class="field">
-        <label>Ligações (entradas relacionadas)</label>
-        <input type="text" id="links-search" placeholder="Buscar entradas para ligar..." oninput="filterLinksSelector()" style="margin-bottom:6px">
-        <div class="links-selector" id="links-selector"></div>
-        <div class="links-grid" id="selected-links" style="margin-top:8px"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-danger" id="btn-delete" style="display:none;margin-right:auto" onclick="deleteEntry()">Excluir</button>
-      <button class="btn btn-ghost" onclick="closeModal('entry-modal')">Cancelar</button>
-      <button class="btn btn-gold" onclick="saveEntry()">✦ Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: EXPORTAR -->
-<div class="modal-overlay" id="export-modal">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <span class="modal-title">Exportar Guia</span>
-      <button class="modal-close" onclick="closeModal('export-modal')">×</button>
-    </div>
-    <div class="modal-body">
-      <p style="color:var(--ink2);margin-bottom:16px;font-size:15px">Escolha o formato de exportação:</p>
-      <div class="export-grid">
-        <div class="export-card" onclick="exportData('json')"><div class="exp-icon">📄</div><div class="exp-title">JSON</div><div class="exp-desc">Backup completo. Pode importar depois.</div></div>
-        <div class="export-card" onclick="exportData('html')"><div class="exp-icon">🌐</div><div class="exp-title">HTML Legível</div><div class="exp-desc">Documento formatado para ler no browser.</div></div>
-        <div class="export-card" onclick="exportData('md')"><div class="exp-icon">📝</div><div class="exp-title">Markdown</div><div class="exp-desc">Compatível com Obsidian, Notion, etc.</div></div>
-        <div class="export-card" onclick="exportData('txt')"><div class="exp-icon">📃</div><div class="exp-title">Texto Plano</div><div class="exp-desc">Simples e universal.</div></div>
-      </div>
-      <hr class="divider">
-      <div class="field"><label>Importar JSON</label><input type="file" id="import-file" accept=".json" onchange="importData(this)"></div>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: CONFIGURAÇÕES -->
-<div class="modal-overlay" id="settings-modal">
-  <div class="modal" style="max-width:400px">
-    <div class="modal-header">
-      <span class="modal-title">Configurações</span>
-      <button class="modal-close" onclick="closeModal('settings-modal')">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="field"><label>Nome do Mundo</label><input type="text" id="s-world-name" placeholder="Ex: Aethoria, Mundi Obscura..."></div>
-      <div class="field"><label>Subtítulo</label><input type="text" id="s-world-sub" placeholder="Ex: Bestiário · Deuses · Criaturas"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('settings-modal')">Cancelar</button>
-      <button class="btn btn-gold" onclick="saveSettings()">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-<input type="file" id="image-file-input" accept="image/*" multiple onchange="handleImageUpload(this)">
-
-<script>
-const CAT_LABELS = {
-  'deity-sup':'Deus Superior','deity-cont':'Deus Continental','magic':'Magia',
-  'creature':'Criatura','culture':'Cultura','continent':'Continente',
-  'city':'Cidade','era':'Era','character':'Personagem',
-  'artifact':'Artefato','faction':'Facção','language':'Língua',
-  'event':'Evento','flora':'Fauna/Flora','all':'Tudo'
-};
-const CAT_ICONS = {
-  'deity-sup':'☀','deity-cont':'⛰','magic':'✦','creature':'🐉',
-  'culture':'🏛','continent':'🗺','city':'🏙','era':'⏳','character':'👤',
-  'artifact':'⚔','faction':'🛡','language':'📜','event':'⚡','flora':'🌿'
-};
-const ALL_CATS = ['deity-sup','deity-cont','magic','creature','culture','continent','city','era','character','artifact','faction','language','event','flora'];
-
-let state = { entries: [], worldName: 'Guia do Mundo', worldSub: 'Bestiário · Deuses · Culturas · Criaturas' };
-let currentTab = 'all';
-let currentEntryId = null;
-let editingId = null;
-let selectedLinks = [];
-
-function save() { localStorage.setItem('world-guide-v3', JSON.stringify(state)); }
-
-function load() {
-  const oldRaw = localStorage.getItem('world-guide-v2');
-  const raw = localStorage.getItem('world-guide-v3') || oldRaw;
-  if (raw) { try { state = JSON.parse(raw); if (!state.entries) state.entries = []; } catch(e) {} }
-  document.getElementById('world-title-display').childNodes[0].textContent = state.worldName;
-  document.getElementById('world-subtitle-display').textContent = state.worldSub;
-  document.title = state.worldName;
+  return { level, xpInLevel: remaining, xpNeeded: needed };
 }
 
-function switchTab(tab, el) {
-  currentTab = tab; currentEntryId = null;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderList(); showWelcome();
+function getDisplayTitle(profile, level) {
+  const owned = TITLES_LIST.filter((t) => t.level <= level && profile.ownedTitles && profile.ownedTitles[t.level]);
+  const highestOwned = owned[owned.length - 1] || TITLES_LIST[0];
+  if (profile.selectedTitle) {
+    const chosen = TITLES_LIST.find((t) => t.level === profile.selectedTitle);
+    if (chosen && chosen.level <= level && profile.ownedTitles && profile.ownedTitles[chosen.level]) return chosen;
+  }
+  return highestOwned;
 }
 
-function getFiltered() {
-  const q = document.getElementById('search-input').value.toLowerCase();
-  return state.entries.filter(e => {
-    const matchTab = currentTab === 'all' || e.cat === currentTab;
-    const matchQ = !q || e.name.toLowerCase().includes(q) ||
-      (e.desc||'').toLowerCase().includes(q) ||
-      (e.subtype||'').toLowerCase().includes(q) ||
-      (e.continentText||'').toLowerCase().includes(q) ||
-      (e.cityKingdom||'').toLowerCase().includes(q) ||
-      (e.eraStart||'').toLowerCase().includes(q) ||
-      (e.artifactPower||'').toLowerCase().includes(q) ||
-      (e.factionAgenda||'').toLowerCase().includes(q) ||
-      (e.langWords||'').toLowerCase().includes(q) ||
-      (e.eventCause||'').toLowerCase().includes(q) ||
-      (e.floraUse||'').toLowerCase().includes(q) ||
-      (e.creatureSubtype||'').toLowerCase().includes(q) ||
-      (e.creatureHabitat||'').toLowerCase().includes(q) ||
-      (e.creatureWeakness||'').toLowerCase().includes(q) ||
-      (e.creatureMyths||'').toLowerCase().includes(q) ||
-      (e.deityDomain||'').toLowerCase().includes(q) ||
-      (e.deitySymbol||'').toLowerCase().includes(q) ||
-      (e.deityRelations||'').toLowerCase().includes(q) ||
-      (e.cultureSubtype||'').toLowerCase().includes(q) ||
-      (e.cultureReligion||'').toLowerCase().includes(q) ||
-      (e.cultureTrade||'').toLowerCase().includes(q);
-    return matchTab && matchQ;
-  });
+function isMissionAvailable(m) {
+  if (m.type === "diaria") return !(m.completedDates || []).includes(todayStr());
+  if (m.type === "semanal") return !(m.completedDates || []).includes(weekKey());
+  return !m.completed;
 }
 
-function updateCounts() {
-  document.getElementById('count-all').textContent = state.entries.length;
-  ALL_CATS.forEach(cat => {
-    const el = document.getElementById('count-' + cat);
-    if (el) el.textContent = state.entries.filter(e => e.cat === cat).length;
-  });
+function missionCompletionCount(m) {
+  if (m.type === "unica" || m.type === "longa") return m.completed ? 1 : 0;
+  return (m.completedDates || []).length;
 }
 
-function renderList() {
-  updateCounts();
-  const list = document.getElementById('entry-list');
-  const entries = getFiltered();
-  if (!entries.length) { list.innerHTML = '<div class="empty-state">Nenhuma entrada encontrada.</div>'; return; }
-  list.innerHTML = entries.map(e => {
-    let sub = '';
-    if (e.cat === 'city') sub = [e.cityType, e.cityKingdom].filter(Boolean).join(' · ');
-    else if (e.cat === 'era') sub = formatEraRange(e);
-    else if (e.cat === 'artifact') sub = [e.artifactType, e.artifactStatus].filter(Boolean).join(' · ');
-    else if (e.cat === 'faction') sub = [e.factionType, e.factionAlign].filter(Boolean).join(' · ');
-    else if (e.cat === 'language') sub = e.langFamily || '';
-    else if (e.cat === 'event') sub = [e.eventType, e.eventDate].filter(Boolean).join(' · ');
-    else if (e.cat === 'flora') sub = [e.floraType, e.floraHabitat].filter(Boolean).join(' · ');
-    else if (e.cat === 'creature') sub = [e.creatureSubtype, e.creatureDanger].filter(Boolean).join(' · ');
-    else if (e.cat === 'deity-sup' || e.cat === 'deity-cont') sub = [e.deityDomain, e.deityRegion].filter(Boolean).join(' · ');
-    else if (e.cat === 'culture') sub = [e.cultureSubtype, e.cultureGov].filter(Boolean).join(' · ');
-    else sub = e.continentText || '';
-    return `<div class="entry-item ${e.id===currentEntryId?'active':''}" onclick="selectEntry('${e.id}')">
-      <div class="entry-thumb">${(e.images&&e.images.length) ? `<img src="${e.images[0]}" alt="">` : (e.image ? `<img src="${e.image}" alt="">` : CAT_ICONS[e.cat]||'?')}</div>
-      <div class="entry-info">
-        <div class="entry-name">${escHtml(e.name)}</div>
-        <div class="entry-sub">
-          <span class="tag ${e.cat}">${CAT_LABELS[e.cat]||e.cat}</span>
-          ${sub ? `<span style="color:var(--ink3);font-size:11px">${escHtml(sub)}</span>` : ''}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function formatEraRange(e) {
-  if (!e.eraStart && !e.eraEnd) return '';
-  const s = e.eraStart || '?';
-  const en = e.eraEnd || 'Presente';
-  return `${s} → ${en}`;
-}
-
-function calcEraDuration(e) {
-  const s = parseInt(e.eraStart);
-  const en = parseInt(e.eraEnd);
-  if (!isNaN(s) && !isNaN(en)) return Math.abs(en - s) + ' anos';
-  return null;
-}
-
-function showWelcome() {
-  document.getElementById('welcome-screen').style.display = '';
-  document.getElementById('entry-detail').style.display = 'none';
-}
-
-function selectEntry(id) {
-  currentEntryId = id; renderList();
-  const e = state.entries.find(x => x.id === id);
-  if (!e) return showWelcome();
-  document.getElementById('welcome-screen').style.display = 'none';
-  const detail = document.getElementById('entry-detail');
-  detail.style.display = '';
-  const linked = (e.links||[]).map(lid => state.entries.find(x=>x.id===lid)).filter(Boolean);
-
-  let attrsHtml = '';
-
-  if (e.cat === 'city') {
-    const rows = [
-      ['Tipo', e.cityType], ['Reino / Continente', e.cityKingdom],
-      ['Status', e.cityStatus], ['Governante / Facção', e.cityRuler],
-      ['População', e.cityPop], ['Era', e.eraText]
-    ].filter(r => r[1]);
-    if (rows.length) attrsHtml = `<div class="attr-grid">${rows.map(r=>`<div class="attr-box"><div class="ab-label">${r[0]}</div><div class="ab-value">${escHtml(r[1])}</div></div>`).join('')}</div>`;
-  } else if (e.cat === 'era') {
-    const dur = calcEraDuration(e);
-    const range = formatEraRange(e);
-    attrsHtml = `
-      ${range ? `<div class="era-timeline-bar"><div class="era-fill" style="width:100%"></div></div>
-      <div class="era-labels"><span>${escHtml(e.eraStart||'?')}</span><span>${escHtml(e.eraEnd||'Presente')}</span></div>
-      ${dur ? `<div class="era-duration">⏳ Duração: ${dur}</div>` : ''}` : ''}
-      <div class="attr-grid" style="margin-top:16px">
-        ${e.eraTone ? `<div class="attr-box"><div class="ab-label">Característica</div><div class="ab-value">${escHtml(e.eraTone)}</div></div>` : ''}
-        ${e.eraStartEvent ? `<div class="attr-box"><div class="ab-label">Início marcado por</div><div class="ab-value">${escHtml(e.eraStartEvent)}</div></div>` : ''}
-        ${e.eraEndEvent ? `<div class="attr-box"><div class="ab-label">Fim marcado por</div><div class="ab-value">${escHtml(e.eraEndEvent)}</div></div>` : ''}
-      </div>`;
-  } else if (e.cat === 'artifact') {
-    const rows = [
-      ['Tipo', e.artifactType], ['Status', e.artifactStatus],
-      ['Criador / Origem', e.artifactCreator], ['Localização', e.artifactLocation],
-      ['Poder / Propriedade', e.artifactPower]
-    ].filter(r => r[1]);
-    if (rows.length) attrsHtml = `<div class="attr-grid">${rows.map(r=>`<div class="attr-box"><div class="ab-label">${r[0]}</div><div class="ab-value">${escHtml(r[1])}</div></div>`).join('')}</div>`;
-  } else if (e.cat === 'faction') {
-    const rows = [
-      ['Tipo', e.factionType], ['Alinhamento', e.factionAlign],
-      ['Símbolo', e.factionSymbol], ['Líder / Hierarquia', e.factionLeader],
-      ['Agenda', e.factionAgenda], ['Territórios', e.factionCities]
-    ].filter(r => r[1]);
-    if (rows.length) attrsHtml = `<div class="attr-grid">${rows.map(r=>`<div class="attr-box"><div class="ab-label">${r[0]}</div><div class="ab-value">${escHtml(r[1])}</div></div>`).join('')}</div>`;
-  } else if (e.cat === 'language') {
-    const rows = [
-      ['Família Linguística', e.langFamily], ['Script / Escrita', e.langScript],
-      ['Falantes', e.langSpeakers], ['Origem', e.langOrigin]
-    ].filter(r => r[1]);
-    let wordsHtml = '';
-    if (e.langWords) {
-      const pairs = e.langWords.split(',').map(w => w.trim()).filter(Boolean);
-      wordsHtml = `<div class="lang-sample-box"><div class="ls-title">✦ Vocabulário</div><div class="ls-words">${pairs.map(p=>`<span class="lang-word">${escHtml(p)}</span>`).join('')}</div></div>`;
+function computeAttributes(missions, attrBonus) {
+  const base = { conhecimento: 10, disciplina: 10, saude: 10, criatividade: 10, carreira: 10, social: 10 };
+  missions.forEach((m) => {
+    const events = missionCompletionCount(m);
+    if (events > 0) {
+      const attr = CATEGORY_ATTR[m.category];
+      if (attr) base[attr] += events * 6;
+      base.disciplina += events * 2;
     }
-    attrsHtml = (rows.length ? `<div class="attr-grid">${rows.map(r=>`<div class="attr-box"><div class="ab-label">${r[0]}</div><div class="ab-value">${escHtml(r[1])}</div></div>`).join('')}</div>` : '') + wordsHtml;
-  } else if (e.cat === 'event') {
-    const rows = [
-      ['Tipo', e.eventType], ['Data / Período', e.eventDate],
-      ['Causa', e.eventCause], ['Consequência', e.eventConsequence],
-      ['Localização', e.eventLocation]
-    ].filter(r => r[1]);
-    if (rows.length) attrsHtml = `<div class="attr-grid">${rows.map(r=>`<div class="attr-box"><div class="ab-label">${r[0]}</div><div class="ab-value">${escHtml(r[1])}</div></div>`).join('')}</div>`;
-  } else if (e.cat === 'flora') {
-    const rows = [
-      ['Tipo', e.floraType], ['Habitat', e.floraHabitat],
-      ['Uso / Importância', e.floraUse], ['Características', e.floraTraits]
-    ].filter(r => r[1]);
-    if (rows.length) attrsHtml = `<div class="attr-grid">${rows.map(r=>`<div class="attr-box"><div class="ab-label">${r[0]}</div><div class="ab-value">${escHtml(r[1])}</div></div>`).join('')}</div>`;
-  } else if (e.cat === 'creature') {
-    const rows = [
-      ['Subtipo', e.creatureSubtype], ['Nível de Ameaça', e.creatureDanger],
-      ['Habitat', e.creatureHabitat], ['Comportamento', e.creatureBehavior],
-      ['Fraquezas', e.creatureWeakness], ['Região', e.creatureRegion],
-      ['Era', e.creatureEra]
-    ].filter(r => r[1]);
-    if (rows.length) attrsHtml = `<div class="attr-grid">${rows.map(r=>`<div class="attr-box"><div class="ab-label">${r[0]}</div><div class="ab-value">${escHtml(r[1])}</div></div>`).join('')}</div>`;
-    if (e.creatureMyths) attrsHtml += `<div class="lang-sample-box" style="margin-top:12px"><div class="ls-title">📖 Mitos & Lendas</div><div style="color:var(--ink2);font-size:15px;font-style:italic">${escHtml(e.creatureMyths)}</div></div>`;
-  } else if (e.cat === 'deity-sup' || e.cat === 'deity-cont') {
-    const rows = [
-      ['Domínio / Esfera', e.deityDomain], ['Região de Culto', e.deityRegion],
-      ['Símbolo Sagrado', e.deitySymbol], ['Animal / Planta Associada', e.deityTotem],
-      ['Clérigos / Templos', e.deityTemples], ['Era', e.deityEra]
-    ].filter(r => r[1]);
-    if (rows.length) attrsHtml = `<div class="attr-grid">${rows.map(r=>`<div class="attr-box"><div class="ab-label">${r[0]}</div><div class="ab-value">${escHtml(r[1])}</div></div>`).join('')}</div>`;
-    if (e.deityRitual) attrsHtml += `<div class="lang-sample-box" style="margin-top:12px"><div class="ls-title">🕯 Ritual de Culto</div><div style="color:var(--ink2);font-size:15px">${escHtml(e.deityRitual)}</div></div>`;
-    if (e.deityRelations) attrsHtml += `<div class="lang-sample-box" style="margin-top:10px"><div class="ls-title">⚖ Relações com Outros Deuses</div><div style="color:var(--ink2);font-size:15px">${escHtml(e.deityRelations)}</div></div>`;
-  } else if (e.cat === 'culture') {
-    const rows = [
-      ['Povo / Etnia', e.cultureSubtype], ['Região', e.cultureRegion],
-      ['Sistema de Governo', e.cultureGov], ['Religião Predominante', e.cultureReligion],
-      ['Língua Falada', e.cultureLanguage], ['Comércio Principal', e.cultureTrade],
-      ['Era', e.cultureEra]
-    ].filter(r => r[1]);
-    if (rows.length) attrsHtml = `<div class="attr-grid">${rows.map(r=>`<div class="attr-box"><div class="ab-label">${r[0]}</div><div class="ab-value">${escHtml(r[1])}</div></div>`).join('')}</div>`;
-    if (e.cultureFunerary) attrsHtml += `<div class="lang-sample-box" style="margin-top:12px"><div class="ls-title">⚰ Tradições Funerárias</div><div style="color:var(--ink2);font-size:15px">${escHtml(e.cultureFunerary)}</div></div>`;
-  } else {
-    const rows = [
-      ['Subtipo', e.subtype], ['Região', e.continentText],
-      ['Era', e.eraText], ['Atributo', e.attr]
-    ].filter(r => r[1]);
-    if (rows.length) attrsHtml = `<div class="attr-grid">${rows.map(r=>`<div class="attr-box"><div class="ab-label">${r[0]}</div><div class="ab-value">${escHtml(r[1])}</div></div>`).join('')}</div>`;
+  });
+  Object.keys(base).forEach((k) => {
+    base[k] += (attrBonus && attrBonus[k]) || 0;
+    base[k] = Math.min(100, base[k]);
+  });
+  return base;
+}
+
+function goalProgress(goal, missions) {
+  const linked = missions.filter((m) => m.goalId === goal.id);
+  if (linked.length === 0) return goal.manualProgress ?? 0;
+  const done = linked.filter((m) => missionCompletionCount(m) > 0).length;
+  return Math.round((done / linked.length) * 100);
+}
+
+function catInfo(key) {
+  return CATEGORIES.find((c) => c.key === key) || CATEGORIES[0];
+}
+
+function addDiaryEntry(next, entry) {
+  if (!next.diary) next.diary = [];
+  next.diary.unshift({ id: uid(), date: todayStr(), type: entry.type || "auto", icon: entry.icon, text: entry.text });
+  if (next.diary.length > 300) next.diary.length = 300;
+}
+
+function checkAchievements(next) {
+  if (!next.profile.unlockedAchievements) next.profile.unlockedAchievements = {};
+  ACHIEVEMENTS.forEach((a) => {
+    if (next.profile.unlockedAchievements[a.id]) return;
+    if (a.check(next)) {
+      next.profile.unlockedAchievements[a.id] = todayStr();
+      addDiaryEntry(next, { icon: a.emoji, text: `Conquista desbloqueada: ${a.name}` });
+    }
+  });
+}
+
+const WEEKDAYS_PT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+/* ---------------------------------------------------------------------- */
+/* Dados iniciais (seed) + normalização                                   */
+/* ---------------------------------------------------------------------- */
+
+function seedData() {
+  return {
+    profile: {
+      name: "Aventureiro(a)",
+      totalXp: 0,
+      gold: 0,
+      totalGoldEarned: 0,
+      streak: 0,
+      lastActiveDate: null,
+      startDate: todayStr(),
+      skills: [],
+      inventory: {},
+      itemsEverUsed: {},
+      attrBonus: { conhecimento: 0, disciplina: 0, saude: 0, criatividade: 0, carreira: 0, social: 0 },
+      pendingXpBoost: false,
+      pendingGoldRoll: false,
+      disciplineAwardedDate: null,
+      everCompletedAllDailies: false,
+      lastCristalWeek: null,
+      segundoFolegoWeek: null,
+      selectedTitle: 1,
+      ownedTitles: { 1: true },
+      unlockedAchievements: {},
+    },
+    goals: [],
+    missions: [
+      { id: uid(), name: "Ler 20 páginas", description: "", category: "Estudos", difficulty: 1, xp: 30, type: "diaria", goalId: null, completedDates: [], completed: false },
+      { id: uid(), name: "Fazer exercício físico", description: "", category: "Saúde", difficulty: 2, xp: 40, type: "diaria", goalId: null, completedDates: [], completed: false },
+      { id: uid(), name: "Estudar programação 5x", description: "", category: "Conhecimento", difficulty: 2, xp: 60, type: "semanal", goalId: null, completedDates: [], completed: false },
+      { id: uid(), name: "Organizar a semana", description: "Planejar tarefas e prioridades", category: "Mental", difficulty: 1, xp: 25, type: "semanal", goalId: null, completedDates: [], completed: false },
+    ],
+    xpLog: [],
+    diary: [],
+  };
+}
+
+function normalizeData(loaded) {
+  const seed = seedData();
+  if (!loaded) return seed;
+  return {
+    profile: {
+      ...seed.profile,
+      ...loaded.profile,
+      attrBonus: { ...seed.profile.attrBonus, ...(loaded.profile && loaded.profile.attrBonus) },
+      inventory: { ...(loaded.profile && loaded.profile.inventory) },
+      itemsEverUsed: { ...(loaded.profile && loaded.profile.itemsEverUsed) },
+      skills: (loaded.profile && loaded.profile.skills) || [],
+      unlockedAchievements: { ...(loaded.profile && loaded.profile.unlockedAchievements) },
+      ownedTitles: {
+        ...seed.profile.ownedTitles,
+        ...(loaded.profile && loaded.profile.ownedTitles),
+        // migração: quem já tinha um título selecionado numa versão anterior (sem custo) o mantém
+        ...(loaded.profile && loaded.profile.selectedTitle ? { [loaded.profile.selectedTitle]: true } : {}),
+      },
+    },
+    goals: loaded.goals || [],
+    missions: loaded.missions || [],
+    xpLog: loaded.xpLog || [],
+    diary: loaded.diary || [],
+  };
+}
+
+const STORAGE_KEY = "growthquest-save-v1";
+
+/* ---------------------------------------------------------------------- */
+/* Componentes de apoio                                                   */
+/* ---------------------------------------------------------------------- */
+
+function Corners() {
+  return (
+    <>
+      <span className="gq-corner gq-corner-tl" />
+      <span className="gq-corner gq-corner-tr" />
+      <span className="gq-corner gq-corner-bl" />
+      <span className="gq-corner gq-corner-br" />
+    </>
+  );
+}
+
+function Panel({ children, style, className = "" }) {
+  return (
+    <div className={`gq-panel ${className}`} style={style}>
+      <Corners />
+      {children}
+    </div>
+  );
+}
+
+function Stars({ n, max = 3 }) {
+  return (
+    <span className="gq-stars">
+      {Array.from({ length: max }).map((_, i) => (
+        <Star key={i} size={12} fill={i < n ? "var(--gold)" : "none"} color={i < n ? "var(--gold)" : "var(--text-faint)"} />
+      ))}
+    </span>
+  );
+}
+
+function TabButton({ active, onClick, icon, label }) {
+  return (
+    <button className={`gq-tab ${active ? "gq-tab-active" : ""}`} onClick={onClick}>
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function XPBar({ value, max, height = 16 }) {
+  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+  return (
+    <div className="gq-xpbar" style={{ height }}>
+      <div className="gq-xpbar-fill" style={{ width: `${pct}%` }} />
+      <div className="gq-xpbar-ticks" />
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* App principal                                                          */
+/* ---------------------------------------------------------------------- */
+
+export default function GrowthQuestApp() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("painel");
+  const [levelUp, setLevelUp] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [showAddMission, setShowAddMission] = useState(false);
+  const [showAddGoal, setShowAddGoal] = useState(false);
+  const [missionFilter, setMissionFilter] = useState({ type: "todas", category: "todas" });
+  const [saveError, setSaveError] = useState(false);
+  const loadedRef = useRef(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await window.storage.get(STORAGE_KEY, false);
+        if (res && res.value) {
+          setData(normalizeData(JSON.parse(res.value)));
+        } else {
+          setData(seedData());
+        }
+      } catch (e) {
+        setData(seedData());
+      } finally {
+        setLoading(false);
+        loadedRef.current = true;
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!loadedRef.current || !data) return;
+    (async () => {
+      try {
+        const res = await window.storage.set(STORAGE_KEY, JSON.stringify(data), false);
+        setSaveError(!res);
+      } catch (e) {
+        setSaveError(true);
+      }
+    })();
+  }, [data]);
+
+  function flashToast(msg) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2600);
   }
 
-  // Normalizar: migrar e.image legado para e.images
-  if (e.image && (!e.images || !e.images.length)) { e.images = [e.image]; delete e.image; save(); }
-  if (!e.images) e.images = [];
+  if (loading || !data) {
+    return (
+      <div className="gq-root gq-loading">
+        <style>{CSS}</style>
+        <div className="gq-loading-text">Abrindo o pergaminho…</div>
+      </div>
+    );
+  }
 
-  const imgs = e.images;
-  const mainImg = imgs.length ? imgs[0] : null;
+  const { profile, goals, missions, xpLog, diary } = data;
+  const levelInfo = computeLevel(profile.totalXp);
+  const attrs = computeAttributes(missions, profile.attrBonus);
+  const displayTitle = getDisplayTitle(profile, levelInfo.level);
+  const unlockedAchievementsCount = Object.keys(profile.unlockedAchievements || {}).length;
 
-  detail.innerHTML = `
-    <div class="detail-hero">
-      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
-        <div class="gallery-main-box" id="gallery-main-box-${e.id}">
-          ${mainImg ? `<img id="gallery-main-img-${e.id}" src="${mainImg}" alt="${escHtml(e.name)}">` : `<span>${CAT_ICONS[e.cat]||'?'}</span>`}
-          ${imgs.length > 1 ? `
-            <div class="gallery-arrows">
-              <button class="gallery-arrow" onclick="galleryPrev('${e.id}')">‹</button>
-              <button class="gallery-arrow" onclick="galleryNext('${e.id}')">›</button>
+  function update(mutator) {
+    setData((prev) => {
+      const next = JSON.parse(JSON.stringify(prev));
+      mutator(next);
+      checkAchievements(next);
+      return next;
+    });
+  }
+
+  // adiciona XP, cuida do log e detecta level up (usado por missões e itens)
+  function grantXp(next, amount) {
+    const before = computeLevel(next.profile.totalXp).level;
+    next.profile.totalXp += Math.round(amount);
+    const after = computeLevel(next.profile.totalXp).level;
+    next.xpLog.push({ date: todayStr(), xp: Math.round(amount) });
+    if (after > before) {
+      for (let lvl = before + 1; lvl <= after; lvl++) {
+        const unlockedTitle = TITLES_LIST.find((t) => t.level === lvl);
+        if (unlockedTitle) {
+          addDiaryEntry(next, { icon: "🏷️", text: `Novo título desbloqueado: ${unlockedTitle.name}` });
+        }
+      }
+      addDiaryEntry(next, { icon: "⭐", text: `Alcançou o Nível ${after}!` });
+      setTimeout(() => {
+        setLevelUp(after);
+        setTimeout(() => setLevelUp(null), 3200);
+      }, 50);
+    }
+  }
+
+  function completeMission(mission) {
+    update((next) => {
+      const m = next.missions.find((x) => x.id === mission.id);
+      if (!m || !isMissionAvailable(m)) return;
+      const p = next.profile;
+
+      // --- XP ---
+      let xp = m.xp;
+      if (p.skills.includes("aprendizado-rapido") && ["Estudos", "Conhecimento"].includes(m.category)) xp *= 1.1;
+      if (p.skills.includes("foco-absoluto") && m.difficulty === 3) xp *= 1.25;
+      if (p.pendingXpBoost) { xp *= 1.5; p.pendingXpBoost = false; }
+      grantXp(next, xp);
+
+      // --- Ouro ---
+      let gold = goldForMission(m);
+      if (p.skills.includes("mao-de-ouro")) gold = gold * 1.1;
+      if (p.pendingGoldRoll) { gold = gold * (0.5 + Math.random() * 1.5); p.pendingGoldRoll = false; }
+      gold = Math.round(gold);
+      p.gold += gold;
+      p.totalGoldEarned = (p.totalGoldEarned || 0) + gold;
+
+      // --- Conclusão ---
+      const t = todayStr();
+      if (m.type === "diaria") m.completedDates = [...(m.completedDates || []), t];
+      else if (m.type === "semanal") m.completedDates = [...(m.completedDates || []), weekKey()];
+      else m.completed = true;
+
+      // --- Meta vinculada concluída ---
+      if (m.goalId) {
+        const g = next.goals.find((x) => x.id === m.goalId);
+        if (g && !g.diaryLogged && goalProgress(g, next.missions) >= 100) {
+          g.diaryLogged = true;
+          addDiaryEntry(next, { icon: "🎯", text: `Meta concluída: ${g.name}!` });
+        }
+      }
+
+      // --- Sequência (streak), com proteção da Chama da Persistência ---
+      if (p.lastActiveDate === t) {
+        // já contabilizado hoje
+      } else if (!p.lastActiveDate) {
+        p.streak = 1;
+      } else {
+        const gap = daysBetween(p.lastActiveDate, t);
+        if (gap === 1) {
+          p.streak += 1;
+        } else if (gap === 2 && (p.inventory["chama-persistencia"] || 0) > 0) {
+          p.inventory["chama-persistencia"] -= 1;
+          p.streak += 1;
+        } else {
+          p.streak = 1;
+        }
+      }
+      p.lastActiveDate = t;
+
+      // --- Todas as diárias do dia concluídas ---
+      const dailies = next.missions.filter((x) => x.type === "diaria");
+      const allDailiesDone = dailies.length > 0 && dailies.every((x) => !isMissionAvailable(x));
+      if (allDailiesDone && !p.everCompletedAllDailies) {
+        p.everCompletedAllDailies = true;
+        addDiaryEntry(next, { icon: "✅", text: "Completou todas as missões diárias do dia! Um dia perfeito." });
+      }
+      if (p.skills.includes("disciplina-skill") && allDailiesDone && p.disciplineAwardedDate !== t) {
+        p.disciplineAwardedDate = t;
+        grantXp(next, 20);
+      }
+    });
+  }
+
+  function deleteMission(id) {
+    update((next) => { next.missions = next.missions.filter((m) => m.id !== id); });
+  }
+
+  function addMission(form) {
+    update((next) => {
+      next.missions.push({
+        id: uid(), name: form.name, description: form.description, category: form.category,
+        difficulty: form.difficulty, xp: form.xp, type: form.type, goalId: form.goalId || null,
+        completedDates: [], completed: false,
+      });
+    });
+    setShowAddMission(false);
+  }
+
+  function addGoal(form) {
+    update((next) => {
+      next.goals.push({ id: uid(), name: form.name, description: form.description, category: form.category, deadline: form.deadline, difficulty: form.difficulty, manualProgress: 0 });
+    });
+    setShowAddGoal(false);
+  }
+
+  function deleteGoal(id) {
+    update((next) => {
+      next.goals = next.goals.filter((g) => g.id !== id);
+      next.missions.forEach((m) => { if (m.goalId === id) m.goalId = null; });
+    });
+  }
+
+  function setManualProgress(id, val) {
+    update((next) => { const g = next.goals.find((x) => x.id === id); if (g) g.manualProgress = val; });
+  }
+
+  function buySkill(skill) {
+    if (profile.skills.includes(skill.key) || profile.gold < skill.cost) return;
+    update((next) => {
+      const p = next.profile;
+      p.gold -= skill.cost;
+      p.skills.push(skill.key);
+      addDiaryEntry(next, { icon: skill.emoji, text: `Adquiriu a habilidade: ${skill.name}` });
+    });
+    flashToast(`${skill.emoji} ${skill.name} adquirida!`);
+  }
+
+  function useSegundoFolego() {
+    if (!profile.skills.includes("segundo-folego")) return;
+    if (profile.segundoFolegoWeek === weekKey()) return;
+    if (!profile.lastActiveDate || daysBetween(profile.lastActiveDate, todayStr()) < 2) return;
+    update((next) => {
+      const p = next.profile;
+      p.segundoFolegoWeek = weekKey();
+      p.lastActiveDate = addDays(todayStr(), -1);
+    });
+    flashToast("⚡ Segundo Fôlego usado — sua sequência foi recuperada!");
+  }
+
+  function buyItem(item) {
+    if (profile.gold < item.price) return;
+    update((next) => {
+      const p = next.profile;
+      p.gold -= item.price;
+      p.inventory[item.key] = (p.inventory[item.key] || 0) + 1;
+    });
+    flashToast(`${item.emoji} ${item.name} comprado!`);
+  }
+
+  function useItem(item) {
+    const owned = profile.inventory[item.key] || 0;
+    if (owned <= 0) return;
+    if (item.key === "cristal-evolucao" && profile.lastCristalWeek === weekKey()) return;
+    update((next) => {
+      const p = next.profile;
+      p.inventory[item.key] -= 1;
+      p.itemsEverUsed = { ...(p.itemsEverUsed || {}), [item.key]: true };
+
+      if (item.key === "pocao-xp") p.pendingXpBoost = true;
+      if (item.key === "dado-destino") p.pendingGoldRoll = true;
+      if (item.key === "pergaminho-conhecimento") p.attrBonus.conhecimento = Math.min(40, p.attrBonus.conhecimento + 15);
+      if (item.key === "cristal-evolucao") { p.lastCristalWeek = weekKey(); grantXp(next, 150); }
+    });
+    flashToast(`${item.emoji} ${item.name} usado!`);
+  }
+
+  function buyTitle(level, cost) {
+    if (levelInfo.level < level) return;
+    if (profile.ownedTitles && profile.ownedTitles[level]) {
+      update((next) => { next.profile.selectedTitle = level; });
+      return;
+    }
+    if (profile.gold < cost) return;
+    update((next) => {
+      const p = next.profile;
+      p.gold -= cost;
+      p.ownedTitles = { ...(p.ownedTitles || {}), [level]: true };
+      p.selectedTitle = level;
+      const t = TITLES_LIST.find((x) => x.level === level);
+      addDiaryEntry(next, { icon: "👑", text: `Título adquirido: ${t ? t.name : level}` });
+    });
+    flashToast("👑 Título adquirido e selecionado!");
+  }
+
+  function addDiaryNote(text) {
+    if (!text.trim()) return;
+    update((next) => {
+      next.diary.unshift({ id: uid(), date: todayStr(), type: "manual", icon: "✍️", text: text.trim() });
+    });
+  }
+
+  function deleteDiaryNote(id) {
+    update((next) => { next.diary = next.diary.filter((d) => d.id !== id); });
+  }
+
+  function resetAll() {
+    if (window.confirm("Isso vai apagar todo o seu progresso salvo. Tem certeza?")) {
+      setData(seedData());
+    }
+  }
+
+  const filteredMissions = missions.filter((m) => {
+    if (missionFilter.type !== "todas" && m.type !== missionFilter.type) return false;
+    if (missionFilter.category !== "todas" && m.category !== missionFilter.category) return false;
+    return true;
+  });
+
+  const todaysMissions = missions.filter((m) => m.type === "diaria" || m.type === "semanal");
+  const totalCompleted = missions.reduce((s, m) => s + missionCompletionCount(m), 0);
+  const totalStudyMissions = missions.filter((m) => ["Estudos", "Conhecimento"].includes(m.category));
+
+  const canUseSegundoFolego = profile.skills.includes("segundo-folego") && profile.segundoFolegoWeek !== weekKey() && profile.lastActiveDate && daysBetween(profile.lastActiveDate, todayStr()) >= 2;
+
+  const last7 = Array.from({ length: 7 }).map((_, i) => {
+    const d = addDays(todayStr(), i - 6);
+    const dayXp = xpLog.filter((l) => l.date === d).reduce((s, l) => s + l.xp, 0);
+    const wd = new Date(d + "T00:00:00");
+    return { label: WEEKDAYS_PT[wd.getDay()], xp: dayXp };
+  });
+
+  const last30 = (() => {
+    const days = Array.from({ length: 30 }).map((_, i) => addDays(todayStr(), i - 29));
+    const priorXp = xpLog.filter((l) => l.date < days[0]).reduce((s, l) => s + l.xp, 0);
+    let cumulative = priorXp;
+    return days.map((d) => {
+      const dayXp = xpLog.filter((l) => l.date === d).reduce((s, l) => s + l.xp, 0);
+      cumulative += dayXp;
+      return { date: d.slice(5), xp: dayXp, total: cumulative };
+    });
+  })();
+
+  return (
+    <div className="gq-root">
+      <style>{CSS}</style>
+
+      {levelUp && <div className="gq-levelup"><Swords size={18} /> Nível {levelUp} alcançado!</div>}
+      {toast && <div className="gq-toast">{toast}</div>}
+
+      {/* ---------- Cabeçalho / Perfil ---------- */}
+      <Panel className="gq-header">
+        <div className="gq-header-row">
+          <div className="gq-avatar">{profile.name.trim().charAt(0).toUpperCase() || "?"}</div>
+          <div className="gq-header-main">
+            <div className="gq-header-top">
+              <input className="gq-name-input" value={profile.name} onChange={(e) => update((n) => { n.profile.name = e.target.value; })} aria-label="Nome do aventureiro" />
+              <button className="gq-title-tag" onClick={() => setTab("titulos")} title="Escolher título">
+                <Crown size={11} /> {displayTitle.name}
+              </button>
             </div>
-            <div class="gallery-nav">${imgs.map((_,i)=>`<button class="gallery-dot ${i===0?'active':''}" id="gdot-${e.id}-${i}" onclick="galleryGoTo('${e.id}',${i})"></button>`).join('')}</div>
-          ` : ''}
-        </div>
-        <div class="image-gallery">
-          ${imgs.map((img,i)=>`
-            <div class="gallery-thumb" onclick="galleryGoTo('${e.id}',${i})" title="Ver imagem ${i+1}">
-              <img src="${img}" alt="Design ${i+1}">
-              <button class="gallery-thumb-remove" onclick="event.stopPropagation();removeImageAt('${e.id}',${i})" title="Remover">✕</button>
-            </div>`).join('')}
-          <div class="gallery-thumb-add" onclick="triggerImageUpload('${e.id}')" title="Adicionar imagem">
-            <span class="add-icon">＋</span>
-            <span>Imagem</span>
+            <div className="gq-level-row">
+              <span className="gq-level-num">Nível {levelInfo.level}</span>
+              <span className="gq-xp-text">{levelInfo.xpInLevel} / {levelInfo.xpNeeded} XP</span>
+            </div>
+            <XPBar value={levelInfo.xpInLevel} max={levelInfo.xpNeeded} />
+          </div>
+          <div className="gq-header-stats">
+            <div className="gq-stat-chip"><Flame size={16} color="var(--garnet)" /><span>{profile.streak} dias</span></div>
+            <div className="gq-stat-chip gq-gold-chip"><Coins size={16} color="var(--gold)" /><span>{profile.gold} ouro</span></div>
           </div>
         </div>
+        {canUseSegundoFolego && (
+          <button className="gq-segundo-folego-btn" onClick={useSegundoFolego}>
+            <Zap size={14} /> Usar Segundo Fôlego — recuperar sequência perdida
+          </button>
+        )}
+      </Panel>
+
+      {/* ---------- Navegação ---------- */}
+      <div className="gq-tabs">
+        <TabButton active={tab === "painel"} onClick={() => setTab("painel")} icon={<ShieldHalf size={15} />} label="Painel" />
+        <TabButton active={tab === "metas"} onClick={() => setTab("metas")} icon={<Target size={15} />} label="Metas" />
+        <TabButton active={tab === "missoes"} onClick={() => setTab("missoes")} icon={<Swords size={15} />} label="Missões" />
+        <TabButton active={tab === "atributos"} onClick={() => setTab("atributos")} icon={<User size={15} />} label="Atributos" />
+        <TabButton active={tab === "titulos"} onClick={() => setTab("titulos")} icon={<Crown size={15} />} label="Títulos" />
+        <TabButton active={tab === "habilidades"} onClick={() => setTab("habilidades")} icon={<Sparkles size={15} />} label="Habilidades" />
+        <TabButton active={tab === "loja"} onClick={() => setTab("loja")} icon={<Coins size={15} />} label="Loja" />
+        <TabButton active={tab === "conquistas"} onClick={() => setTab("conquistas")} icon={<Trophy size={15} />} label="Conquistas" />
+        <TabButton active={tab === "diario"} onClick={() => setTab("diario")} icon={<BookOpen size={15} />} label="Diário" />
+        <TabButton active={tab === "progresso"} onClick={() => setTab("progresso")} icon={<TrendingUp size={15} />} label="Progresso" />
       </div>
-      <div class="detail-meta">
-        <div class="detail-title">${escHtml(e.name)}</div>
-        <div class="detail-subtitle">${escHtml(CAT_LABELS[e.cat]||'')}${
-          e.cat==='creature'&&e.creatureSubtype?' · '+escHtml(e.creatureSubtype):
-          (e.cat==='deity-sup'||e.cat==='deity-cont')&&e.deityDomain?' · '+escHtml(e.deityDomain):
-          e.cat==='culture'&&e.cultureSubtype?' · '+escHtml(e.cultureSubtype):
-          e.subtype&&e.cat!=='era'?' · '+escHtml(e.subtype):''
-        }</div>
-        <div class="detail-tags">
-          <span class="tag ${e.cat}">${escHtml(CAT_LABELS[e.cat]||e.cat)}</span>
-          ${e.cat==='creature'&&e.creatureDanger ? `<span class="tag creature">⚠ ${escHtml(e.creatureDanger)}</span>` : ''}
-          ${e.cat==='creature'&&e.creatureBehavior ? `<span class="tag">${escHtml(e.creatureBehavior)}</span>` : ''}
-          ${e.cat==='creature'&&e.creatureHabitat ? `<span class="tag continent">🗺 ${escHtml(e.creatureHabitat)}</span>` : ''}
-          ${(e.cat==='deity-sup'||e.cat==='deity-cont')&&e.deitySymbol ? `<span class="tag deity-sup">✦ ${escHtml(e.deitySymbol)}</span>` : ''}
-          ${(e.cat==='deity-sup'||e.cat==='deity-cont')&&e.deityRegion ? `<span class="tag continent">🗺 ${escHtml(e.deityRegion)}</span>` : ''}
-          ${e.cat==='culture'&&e.cultureGov ? `<span class="tag faction">${escHtml(e.cultureGov)}</span>` : ''}
-          ${e.cat==='culture'&&e.cultureRegion ? `<span class="tag continent">🗺 ${escHtml(e.cultureRegion)}</span>` : ''}
-          ${e.cat==='city'&&e.cityType ? `<span class="tag">${escHtml(e.cityType)}</span>` : ''}
-          ${e.cat==='city'&&e.cityStatus ? `<span class="tag">${escHtml(e.cityStatus)}</span>` : ''}
-          ${e.cat==='era'&&(e.eraStart||e.eraEnd) ? `<span class="tag era">⏳ ${escHtml(formatEraRange(e))}</span>` : ''}
-          ${e.cat==='artifact'&&e.artifactType ? `<span class="tag artifact">${escHtml(e.artifactType)}</span>` : ''}
-          ${e.cat==='artifact'&&e.artifactStatus ? `<span class="tag">${escHtml(e.artifactStatus)}</span>` : ''}
-          ${e.cat==='faction'&&e.factionType ? `<span class="tag faction">${escHtml(e.factionType)}</span>` : ''}
-          ${e.cat==='faction'&&e.factionAlign ? `<span class="tag">${escHtml(e.factionAlign)}</span>` : ''}
-          ${e.cat==='language'&&e.langFamily ? `<span class="tag language">${escHtml(e.langFamily)}</span>` : ''}
-          ${e.cat==='event'&&e.eventType ? `<span class="tag event">${escHtml(e.eventType)}</span>` : ''}
-          ${e.cat==='event'&&e.eventDate ? `<span class="tag">📅 ${escHtml(e.eventDate)}</span>` : ''}
-          ${e.cat==='flora'&&e.floraType ? `<span class="tag flora">${escHtml(e.floraType)}</span>` : ''}
-          ${e.cat!=='city'&&e.cat!=='era'&&e.cat!=='artifact'&&e.cat!=='faction'&&e.cat!=='language'&&e.cat!=='event'&&e.cat!=='flora'&&e.cat!=='creature'&&e.cat!=='deity-sup'&&e.cat!=='deity-cont'&&e.cat!=='culture'&&e.continentText ? `<span class="tag continent">🗺 ${escHtml(e.continentText)}</span>` : ''}
-          ${e.cat!=='era'&&e.eraText ? `<span class="tag era">⏳ ${escHtml(e.eraText)}</span>` : ''}
+
+      {/* ---------- PAINEL ---------- */}
+      {tab === "painel" && (
+        <div className="gq-grid-2">
+          <Panel>
+            <h3 className="gq-panel-title">Missões de hoje</h3>
+            {todaysMissions.length === 0 && <p className="gq-empty">Nenhuma missão diária ou semanal cadastrada ainda.</p>}
+            <div className="gq-mission-mini-list">
+              {todaysMissions.map((m) => {
+                const available = isMissionAvailable(m);
+                const cat = catInfo(m.category);
+                return (
+                  <button key={m.id} className={`gq-mini-mission ${!available ? "gq-mini-mission-done" : ""}`} onClick={() => available && completeMission(m)} disabled={!available}>
+                    {available ? <Circle size={16} /> : <CheckCircle2 size={16} color="var(--sage)" />}
+                    <span className="gq-mini-mission-cat" style={{ color: cat.color }}>{cat.emoji}</span>
+                    <span className="gq-mini-mission-name">{m.name}</span>
+                    <span className="gq-mini-mission-xp">+{m.xp} XP · +{goldForMission(m)} 🪙</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Panel>
+
+          <Panel>
+            <h3 className="gq-panel-title">XP nos últimos 7 dias</h3>
+            <div style={{ width: "100%", height: 180 }}>
+              <ResponsiveContainer>
+                <BarChart data={last7} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                  <CartesianGrid stroke="var(--panel-border)" vertical={false} />
+                  <XAxis dataKey="label" stroke="var(--text-faint)" fontSize={12} tickLine={false} axisLine={{ stroke: "var(--panel-border)" }} />
+                  <YAxis stroke="var(--text-faint)" fontSize={12} tickLine={false} axisLine={false} width={34} />
+                  <Tooltip contentStyle={{ background: "var(--bg-alt)", border: "1px solid var(--panel-border)", borderRadius: 4, fontFamily: "var(--font-mono)", fontSize: 12 }} labelStyle={{ color: "var(--text)" }} cursor={{ fill: "rgba(227,179,65,0.08)" }} />
+                  <Bar dataKey="xp" fill="var(--gold)" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Panel>
+
+          <Panel className="gq-span-2">
+            <h3 className="gq-panel-title">Metas em andamento</h3>
+            {goals.length === 0 ? (
+              <p className="gq-empty">Você ainda não criou nenhuma meta. Vá até a aba <b>Metas</b> para começar sua primeira jornada.</p>
+            ) : (
+              <div className="gq-goal-mini-list">
+                {goals.map((g) => {
+                  const pct = goalProgress(g, missions);
+                  const cat = catInfo(g.category);
+                  return (
+                    <div key={g.id} className="gq-goal-mini">
+                      <div className="gq-goal-mini-top"><span>{cat.emoji} {g.name}</span><span className="gq-mono">{pct}%</span></div>
+                      <div className="gq-progress-bar"><div className="gq-progress-fill" style={{ width: `${pct}%`, background: cat.color }} /></div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Panel>
         </div>
-        <div class="detail-actions">
-          <button class="btn btn-gold" onclick="openEditModal('${e.id}')">✎ Editar</button>
+      )}
+
+      {/* ---------- METAS ---------- */}
+      {tab === "metas" && (
+        <div>
+          <div className="gq-section-head">
+            <h2 className="gq-h2">Suas metas</h2>
+            <button className="gq-btn-primary" onClick={() => setShowAddGoal((s) => !s)}><Plus size={15} /> Nova meta</button>
+          </div>
+          {showAddGoal && <AddGoalForm onSubmit={addGoal} onCancel={() => setShowAddGoal(false)} />}
+          {goals.length === 0 && !showAddGoal && (
+            <Panel><p className="gq-empty">Nenhuma meta ainda. Metas são objetivos maiores — como "Aprender programação" — divididos em missões menores.</p></Panel>
+          )}
+          <div className="gq-grid-2">
+            {goals.map((g) => {
+              const pct = goalProgress(g, missions);
+              const linked = missions.filter((m) => m.goalId === g.id);
+              const xpTotal = linked.reduce((s, m) => s + m.xp, 0);
+              const cat = catInfo(g.category);
+              return (
+                <Panel key={g.id}>
+                  <div className="gq-card-top">
+                    <span className="gq-cat-tag" style={{ borderColor: cat.color, color: cat.color }}>{cat.emoji} {g.category}</span>
+                    <button className="gq-icon-btn" onClick={() => deleteGoal(g.id)} aria-label="Excluir meta"><Trash2 size={14} /></button>
+                  </div>
+                  <h3 className="gq-card-title">{g.name}</h3>
+                  {g.description && <p className="gq-card-desc">{g.description}</p>}
+                  <div className="gq-card-meta-row">
+                    <Stars n={g.difficulty} />
+                    {g.deadline && <span className="gq-mono gq-deadline">até {g.deadline}</span>}
+                  </div>
+                  <div className="gq-progress-bar" style={{ marginTop: 10 }}><div className="gq-progress-fill" style={{ width: `${pct}%`, background: cat.color }} /></div>
+                  <div className="gq-goal-footer">
+                    <span className="gq-mono">{pct}% concluído</span>
+                    <span className="gq-mono">{linked.length ? `${linked.length} missões · ${xpTotal} XP` : "sem missões vinculadas"}</span>
+                  </div>
+                  {linked.length === 0 && (
+                    <div className="gq-manual-progress">
+                      <label>Progresso manual</label>
+                      <input type="range" min={0} max={100} value={g.manualProgress ?? 0} onChange={(e) => setManualProgress(g.id, Number(e.target.value))} />
+                    </div>
+                  )}
+                </Panel>
+              );
+            })}
+          </div>
         </div>
+      )}
+
+      {/* ---------- MISSÕES ---------- */}
+      {tab === "missoes" && (
+        <div>
+          <div className="gq-section-head">
+            <h2 className="gq-h2">Missões</h2>
+            <button className="gq-btn-primary" onClick={() => setShowAddMission((s) => !s)}><Plus size={15} /> Nova missão</button>
+          </div>
+          {showAddMission && <AddMissionForm goals={goals} onSubmit={addMission} onCancel={() => setShowAddMission(false)} />}
+          <div className="gq-filters">
+            <select className="gq-select" value={missionFilter.type} onChange={(e) => setMissionFilter((f) => ({ ...f, type: e.target.value }))}>
+              <option value="todas">Todos os tipos</option>
+              {MISSION_TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
+            </select>
+            <select className="gq-select" value={missionFilter.category} onChange={(e) => setMissionFilter((f) => ({ ...f, category: e.target.value }))}>
+              <option value="todas">Todas as categorias</option>
+              {CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.emoji} {c.key}</option>)}
+            </select>
+          </div>
+          {filteredMissions.length === 0 && <Panel><p className="gq-empty">Nenhuma missão encontrada com esse filtro.</p></Panel>}
+          <div className="gq-mission-list">
+            {filteredMissions.map((m) => {
+              const available = isMissionAvailable(m);
+              const cat = catInfo(m.category);
+              const goal = goals.find((g) => g.id === m.goalId);
+              return (
+                <div key={m.id} className="gq-mission-card" style={{ borderLeftColor: cat.color }}>
+                  <button className="gq-check-btn" onClick={() => available && completeMission(m)} disabled={!available} aria-label="Concluir missão">
+                    {available ? <Circle size={22} /> : <CheckCircle2 size={22} color="var(--sage)" />}
+                  </button>
+                  <div className="gq-mission-body">
+                    <div className="gq-mission-top">
+                      <span className="gq-mission-name">{m.name}</span>
+                      <span className="gq-mono gq-mission-xp">+{m.xp} XP · +{goldForMission(m)} 🪙</span>
+                    </div>
+                    {m.description && <p className="gq-card-desc">{m.description}</p>}
+                    <div className="gq-mission-tags">
+                      <span className="gq-cat-tag" style={{ borderColor: cat.color, color: cat.color }}>{cat.emoji} {m.category}</span>
+                      <span className="gq-type-tag">{MISSION_TYPES.find((t) => t.key === m.type)?.label}</span>
+                      <Stars n={m.difficulty} />
+                      {goal && <span className="gq-goal-tag">🎯 {goal.name}</span>}
+                      {!available && <span className="gq-done-tag">concluída{m.type === "diaria" ? " hoje" : m.type === "semanal" ? " esta semana" : ""}</span>}
+                    </div>
+                  </div>
+                  <button className="gq-icon-btn" onClick={() => deleteMission(m.id)} aria-label="Excluir missão"><Trash2 size={14} /></button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ---------- ATRIBUTOS ---------- */}
+      {tab === "atributos" && (
+        <Panel>
+          <h3 className="gq-panel-title">Ficha do aventureiro</h3>
+          <p className="gq-empty" style={{ marginBottom: 20 }}>Cada missão concluída fortalece os atributos ligados à sua categoria.</p>
+          <div className="gq-attr-list">
+            {ATTRIBUTES.map((a) => (
+              <div key={a.key} className="gq-attr-row">
+                <div className="gq-attr-label"><span>{a.emoji}</span><span>{a.label}</span></div>
+                <div className="gq-progress-bar gq-attr-bar"><div className="gq-progress-fill" style={{ width: `${attrs[a.key]}%`, background: a.color }} /></div>
+                <span className="gq-mono gq-attr-value">{attrs[a.key]}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      )}
+
+      {/* ---------- TÍTULOS ---------- */}
+      {tab === "titulos" && (
+        <div>
+          <div className="gq-section-head">
+            <h2 className="gq-h2">Títulos</h2>
+            <span className="gq-mono gq-tab-side-info">Nível atual: {levelInfo.level}</span>
+          </div>
+          <p className="gq-empty" style={{ marginBottom: 16 }}>Ao alcançar o nível necessário, você pode comprar o título com ouro. Títulos comprados são seus para sempre — escolha qual exibir no perfil a qualquer momento.</p>
+          {TITLE_TIERS.map((tier) => {
+            const tierTitles = TITLES_LIST.filter((t) => t.tier === tier.key);
+            const tierOwnedCount = tierTitles.filter((t) => profile.ownedTitles && profile.ownedTitles[t.level]).length;
+            return (
+              <Panel key={tier.key}>
+                <div className="gq-card-top">
+                  <h3 className="gq-panel-title" style={{ margin: 0 }}>{tier.emoji} {tier.label}</h3>
+                  <span className="gq-mono gq-tab-side-info"><Coins size={11} style={{ verticalAlign: "-1px" }} /> {tier.cost} cada · {tierOwnedCount}/{tierTitles.length} adquiridos</span>
+                </div>
+                <p className="gq-empty" style={{ marginBottom: 12 }}>{tier.desc}</p>
+                <div className="gq-title-grid">
+                  {tierTitles.map((t) => {
+                    const unlocked = levelInfo.level >= t.level;
+                    const owned = !!(profile.ownedTitles && profile.ownedTitles[t.level]);
+                    const selected = displayTitle.level === t.level;
+                    const canAfford = profile.gold >= tier.cost;
+                    let stateClass = "gq-title-locked";
+                    if (unlocked && owned) stateClass = selected ? "gq-title-selected" : "gq-title-owned";
+                    else if (unlocked && !owned) stateClass = "gq-title-buyable";
+                    return (
+                      <button
+                        key={t.level}
+                        className={`gq-title-chip ${stateClass}`}
+                        disabled={!unlocked || (!owned && !canAfford)}
+                        onClick={() => buyTitle(t.level, tier.cost)}
+                        title={!unlocked ? `Requer nível ${t.level}` : owned ? "Selecionar título" : `Comprar por ${tier.cost} ouro`}
+                      >
+                        {!unlocked ? (
+                          <Lock size={11} />
+                        ) : owned ? (
+                          <span className="gq-title-lvl">Nv.{t.level}</span>
+                        ) : (
+                          <Coins size={11} />
+                        )}
+                        <span>{t.name}</span>
+                        {unlocked && !owned && <span className="gq-mono gq-title-cost">{tier.cost}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Panel>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ---------- HABILIDADES ---------- */}
+      {tab === "habilidades" && (
+        <div>
+          <div className="gq-section-head">
+            <h2 className="gq-h2">Árvore de habilidades</h2>
+            <div className="gq-stat-chip gq-gold-chip"><Coins size={16} color="var(--gold)" /><span>{profile.gold} ouro</span></div>
+          </div>
+          <p className="gq-empty" style={{ marginBottom: 16 }}>Habilidades são permanentes: uma vez adquiridas, ficam para sempre com você.</p>
+          <div className="gq-grid-2">
+            {SKILLS.map((s) => {
+              const owned = profile.skills.includes(s.key);
+              const canAfford = profile.gold >= s.cost;
+              return (
+                <Panel key={s.key} className={owned ? "gq-owned-panel" : ""}>
+                  <div className="gq-card-top">
+                    <span className="gq-skill-emoji">{s.emoji}</span>
+                    {owned ? <span className="gq-owned-tag">Adquirida</span> : <span className="gq-mono gq-cost-tag"><Coins size={12} /> {s.cost}</span>}
+                  </div>
+                  <h3 className="gq-card-title">{s.name}</h3>
+                  <p className="gq-card-desc">{s.desc}</p>
+                  {!owned && (
+                    <button className="gq-btn-primary gq-full-width" disabled={!canAfford} onClick={() => buySkill(s)}>
+                      {canAfford ? <><Coins size={14} /> Comprar por {s.cost}</> : <><Lock size={14} /> Ouro insuficiente</>}
+                    </button>
+                  )}
+                  {owned && s.active && (
+                    <p className="gq-mono gq-active-status">
+                      {profile.segundoFolegoWeek === weekKey() ? "usada esta semana" : "disponível esta semana"}
+                    </p>
+                  )}
+                </Panel>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ---------- LOJA ---------- */}
+      {tab === "loja" && (
+        <div>
+          <div className="gq-section-head">
+            <h2 className="gq-h2">Loja</h2>
+            <div className="gq-stat-chip gq-gold-chip"><Coins size={16} color="var(--gold)" /><span>{profile.gold} ouro</span></div>
+          </div>
+          <p className="gq-empty" style={{ marginBottom: 16 }}>Itens são consumíveis: compre quantos quiser, use quando precisar.</p>
+          <div className="gq-grid-2">
+            {ITEMS.map((it) => {
+              const Icon = it.icon;
+              const owned = profile.inventory[it.key] || 0;
+              const canAfford = profile.gold >= it.price;
+              const cristalLocked = it.key === "cristal-evolucao" && profile.lastCristalWeek === weekKey();
+              return (
+                <Panel key={it.key}>
+                  <div className="gq-card-top">
+                    <span className="gq-skill-emoji"><Icon size={22} color="var(--gold)" /></span>
+                    {owned > 0 && <span className="gq-owned-tag">×{owned} no inventário</span>}
+                  </div>
+                  <h3 className="gq-card-title">{it.name}</h3>
+                  <p className="gq-card-desc">{it.desc}</p>
+                  <div className="gq-item-actions">
+                    <button className="gq-btn-ghost" disabled={!canAfford} onClick={() => buyItem(it)}>
+                      <Coins size={14} /> Comprar · {it.price}
+                    </button>
+                    {it.usable && (
+                      <button className="gq-btn-primary" disabled={owned <= 0 || cristalLocked} onClick={() => useItem(it)}>
+                        {cristalLocked ? "Usado esta semana" : "Usar"}
+                      </button>
+                    )}
+                  </div>
+                </Panel>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ---------- CONQUISTAS ---------- */}
+      {tab === "conquistas" && (
+        <div>
+          <div className="gq-section-head">
+            <h2 className="gq-h2">Conquistas</h2>
+            <span className="gq-mono gq-tab-side-info">{unlockedAchievementsCount}/{ACHIEVEMENTS.length} desbloqueadas</span>
+          </div>
+          <p className="gq-empty" style={{ marginBottom: 16 }}>Marcos da sua jornada. Continue completando missões, metas e usando itens para desbloqueá-los.</p>
+          <div className="gq-grid-2">
+            {ACHIEVEMENTS.map((a) => {
+              const unlockedDate = profile.unlockedAchievements && profile.unlockedAchievements[a.id];
+              return (
+                <Panel key={a.id} className={unlockedDate ? "gq-owned-panel" : "gq-locked-panel"}>
+                  <div className="gq-card-top">
+                    <span className="gq-skill-emoji">{unlockedDate ? a.emoji : <Lock size={20} color="var(--text-faint)" />}</span>
+                    {unlockedDate ? <span className="gq-owned-tag">desde {unlockedDate}</span> : <span className="gq-mono gq-locked-tag">bloqueada</span>}
+                  </div>
+                  <h3 className="gq-card-title" style={unlockedDate ? {} : { color: "var(--text-faint)" }}>{a.name}</h3>
+                  <p className="gq-card-desc">{a.desc}</p>
+                </Panel>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ---------- DIÁRIO ---------- */}
+      {tab === "diario" && (
+        <div>
+          <div className="gq-section-head">
+            <h2 className="gq-h2">Diário do Explorador</h2>
+          </div>
+          <Panel className="gq-form-panel">
+            <h3 className="gq-panel-title">Nova anotação</h3>
+            <DiaryForm onSubmit={addDiaryNote} />
+          </Panel>
+          {diary.length === 0 ? (
+            <Panel><p className="gq-empty">Seu diário está vazio. Escreva sobre sua jornada ou continue completando missões — grandes feitos serão registrados aqui automaticamente.</p></Panel>
+          ) : (
+            <div className="gq-diary-list">
+              {diary.map((entry) => (
+                <div key={entry.id} className={`gq-diary-entry ${entry.type === "auto" ? "gq-diary-auto" : ""}`}>
+                  <span className="gq-diary-icon">{entry.icon}</span>
+                  <div className="gq-diary-body">
+                    <p className="gq-diary-text">{entry.text}</p>
+                    <span className="gq-mono gq-diary-date">{entry.date}</span>
+                  </div>
+                  {entry.type === "manual" && (
+                    <button className="gq-icon-btn" onClick={() => deleteDiaryNote(entry.id)} aria-label="Excluir anotação"><Trash2 size={13} /></button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ---------- PROGRESSO ---------- */}
+      {tab === "progresso" && (
+        <div>
+          <div className="gq-grid-4">
+            <Panel><div className="gq-stat-big"><span>{profile.totalXp}</span><label>XP acumulado</label></div></Panel>
+            <Panel><div className="gq-stat-big"><span>{profile.gold}</span><label>Ouro</label></div></Panel>
+            <Panel><div className="gq-stat-big"><span>{totalCompleted}</span><label>Missões concluídas</label></div></Panel>
+            <Panel><div className="gq-stat-big"><span>{levelInfo.level}</span><label>Nível</label></div></Panel>
+          </div>
+          <Panel style={{ marginTop: 16 }}>
+            <h3 className="gq-panel-title">Evolução de XP — últimos 30 dias</h3>
+            <div style={{ width: "100%", height: 260 }}>
+              <ResponsiveContainer>
+                <LineChart data={last30} margin={{ top: 8, right: 12, left: -14, bottom: 0 }}>
+                  <CartesianGrid stroke="var(--panel-border)" vertical={false} />
+                  <XAxis dataKey="date" stroke="var(--text-faint)" fontSize={11} tickLine={false} axisLine={{ stroke: "var(--panel-border)" }} interval={4} />
+                  <YAxis stroke="var(--text-faint)" fontSize={11} tickLine={false} axisLine={false} width={40} />
+                  <Tooltip contentStyle={{ background: "var(--bg-alt)", border: "1px solid var(--panel-border)", borderRadius: 4, fontFamily: "var(--font-mono)", fontSize: 12 }} labelStyle={{ color: "var(--text)" }} />
+                  <Line type="monotone" dataKey="total" stroke="var(--gold)" strokeWidth={2} dot={false} name="XP total" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </Panel>
+          {totalStudyMissions.length > 0 && (
+            <Panel style={{ marginTop: 16 }}>
+              <h3 className="gq-panel-title">Missões de estudo &amp; conhecimento</h3>
+              <div className="gq-mission-mini-list">
+                {totalStudyMissions.map((m) => (
+                  <div key={m.id} className="gq-mini-mission gq-mini-mission-static">
+                    <span>{catInfo(m.category).emoji}</span>
+                    <span className="gq-mini-mission-name">{m.name}</span>
+                    <span className="gq-mono">{missionCompletionCount(m)}x concluída</span>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          )}
+        </div>
+      )}
+
+      <div className="gq-footer">
+        <span>{saveError ? "⚠️ não foi possível salvar agora — seu progresso segue nesta sessão" : "dados salvos automaticamente"}</span>
+        <button className="gq-reset-link" onClick={resetAll}>reiniciar progresso</button>
       </div>
     </div>
-    ${attrsHtml ? `<hr class="divider">${attrsHtml}` : ''}
-    <hr class="divider">
-    <div class="section-label">✦ Descrição</div>
-    ${e.desc ? `<div class="detail-desc">${escHtml(e.desc)}</div>` : `<div class="detail-desc-placeholder">Nenhuma descrição ainda. Clique em Editar para adicionar.</div>`}
-    ${linked.length ? `<hr class="divider"><div class="section-label">🔗 Ligações</div>
-    <div class="links-grid">${linked.map(le=>`
-      <div class="link-chip" onclick="selectEntry('${le.id}')">
-        <span>${CAT_ICONS[le.cat]||'·'}</span>
-        <span>${escHtml(le.name)}</span>
-        <span class="tag ${le.cat}" style="margin-left:4px">${escHtml(CAT_LABELS[le.cat]||le.cat)}</span>
-      </div>`).join('')}
-    </div>` : ''}
-    <div class="ornament" style="margin-top:40px">· · ✦ · ·</div>`;
+  );
 }
 
-// IMAGE — suporte a múltiplas imagens
-let pendingImageEntryId = null;
-let galleryIndex = {};  // entryId -> índice atual exibido na caixa principal
+/* ---------------------------------------------------------------------- */
+/* Formulários                                                            */
+/* ---------------------------------------------------------------------- */
 
-function triggerImageUpload(id) { pendingImageEntryId = id; document.getElementById('image-file-input').click(); }
+function AddGoalForm({ onSubmit, onCancel }) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState(CATEGORIES[0].key);
+  const [deadline, setDeadline] = useState("");
+  const [difficulty, setDifficulty] = useState(2);
 
-function handleImageUpload(input) {
-  if (!input.files || !input.files.length || !pendingImageEntryId) return;
-  const e = state.entries.find(x => x.id === pendingImageEntryId);
-  if (!e) { input.value = ''; pendingImageEntryId = null; return; }
-  if (!e.images) e.images = [];
-  // migração legada
-  if (e.image) { e.images.unshift(e.image); delete e.image; }
-
-  const files = Array.from(input.files);
-  let loaded = 0;
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      e.images.push(ev.target.result);
-      loaded++;
-      if (loaded === files.length) {
-        save(); renderList();
-        const eid = pendingImageEntryId;
-        if (currentEntryId === eid) selectEntry(eid);
-        input.value = ''; pendingImageEntryId = null;
-        toast(`✦ ${files.length > 1 ? files.length + ' imagens adicionadas!' : 'Imagem adicionada!'}`);
-      }
-    };
-    reader.readAsDataURL(file);
-  });
+  return (
+    <Panel className="gq-form-panel">
+      <h3 className="gq-panel-title">Nova meta</h3>
+      <div className="gq-form-grid">
+        <label className="gq-field gq-field-wide"><span>Nome</span><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Aprender programação" /></label>
+        <label className="gq-field gq-field-wide"><span>Descrição</span><input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Opcional" /></label>
+        <label className="gq-field"><span>Categoria</span>
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.emoji} {c.key}</option>)}</select>
+        </label>
+        <label className="gq-field"><span>Prazo</span><input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} /></label>
+        <label className="gq-field"><span>Dificuldade</span>
+          <select value={difficulty} onChange={(e) => setDifficulty(Number(e.target.value))}>
+            <option value={1}>⭐ Fácil</option><option value={2}>⭐⭐ Média</option><option value={3}>⭐⭐⭐ Difícil</option>
+          </select>
+        </label>
+      </div>
+      <div className="gq-form-actions">
+        <button className="gq-btn-ghost" onClick={onCancel}><X size={14} /> Cancelar</button>
+        <button className="gq-btn-primary" disabled={!name.trim()} onClick={() => onSubmit({ name: name.trim(), description: description.trim(), category, deadline, difficulty })}>Criar meta</button>
+      </div>
+    </Panel>
+  );
 }
 
-function removeImageAt(id, idx) {
-  const e = state.entries.find(x => x.id === id);
-  if (!e || !e.images) return;
-  if (!confirm('Remover esta imagem?')) return;
-  e.images.splice(idx, 1);
-  if (galleryIndex[id] >= e.images.length) galleryIndex[id] = Math.max(0, e.images.length - 1);
-  save(); renderList(); if (currentEntryId === id) selectEntry(id);
-}
+function AddMissionForm({ goals, onSubmit, onCancel }) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState(CATEGORIES[0].key);
+  const [difficulty, setDifficulty] = useState(1);
+  const [type, setType] = useState("diaria");
+  const [xp, setXp] = useState(20);
+  const [goalId, setGoalId] = useState("");
+  const [xpTouched, setXpTouched] = useState(false);
 
-function removeImage(id) {
-  const e = state.entries.find(x => x.id === id);
-  if (!e) return;
-  if (!confirm('Remover todas as imagens?')) return;
-  e.images = []; delete e.image;
-  galleryIndex[id] = 0;
-  save(); renderList(); selectEntry(id);
-}
-
-function galleryGoTo(id, idx) {
-  const e = state.entries.find(x => x.id === id);
-  if (!e || !e.images || !e.images[idx]) return;
-  galleryIndex[id] = idx;
-  const imgEl = document.getElementById('gallery-main-img-' + id);
-  if (imgEl) imgEl.src = e.images[idx];
-  // atualizar dots
-  e.images.forEach((_,i) => {
-    const dot = document.getElementById(`gdot-${id}-${i}`);
-    if (dot) dot.classList.toggle('active', i === idx);
-  });
-}
-
-function galleryPrev(id) {
-  const e = state.entries.find(x => x.id === id);
-  if (!e || !e.images || e.images.length < 2) return;
-  const cur = galleryIndex[id] || 0;
-  galleryGoTo(id, (cur - 1 + e.images.length) % e.images.length);
-}
-
-function galleryNext(id) {
-  const e = state.entries.find(x => x.id === id);
-  if (!e || !e.images || e.images.length < 2) return;
-  const cur = galleryIndex[id] || 0;
-  galleryGoTo(id, (cur + 1) % e.images.length);
-}
-
-// MODAL
-const SPECIFIC_CATS = ['city','era','artifact','faction','language','event','flora','creature','deity-sup','deity-cont','culture'];
-function onCatChange() {
-  const cat = document.getElementById('f-cat').value;
-  const isSpecific = SPECIFIC_CATS.includes(cat);
-  document.getElementById('fields-general').style.display = isSpecific ? 'none' : '';
-  ['city','era','artifact','faction','language','event','flora'].forEach(c => {
-    document.getElementById('fields-'+c).style.display = cat===c ? '' : 'none';
-  });
-  // deity block covers both deity-sup and deity-cont
-  document.getElementById('fields-deity').style.display = (cat==='deity-sup'||cat==='deity-cont') ? '' : 'none';
-  document.getElementById('fields-creature').style.display = cat==='creature' ? '' : 'none';
-  document.getElementById('fields-culture').style.display = cat==='culture' ? '' : 'none';
-}
-
-function openAddModal() {
-  editingId = null; selectedLinks = [];
-  document.getElementById('modal-title-text').textContent = 'Nova Entrada';
-  document.getElementById('btn-delete').style.display = 'none';
-  document.getElementById('f-name').value = '';
-  document.getElementById('f-cat').value = (currentTab!=='all') ? currentTab : '';
-  document.getElementById('f-subtype').value = '';
-  document.getElementById('f-continent-text').value = '';
-  document.getElementById('f-era-text').value = '';
-  document.getElementById('f-attr').value = '';
-  document.getElementById('f-desc').value = '';
-  // city fields
-  ['f-city-kingdom','f-city-ruler','f-city-pop'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('f-city-type').value = '';
-  document.getElementById('f-city-status').value = '';
-  // era fields
-  ['f-era-start','f-era-end','f-era-start-event','f-era-end-event','f-era-tone'].forEach(id => document.getElementById(id).value='');
-  // artifact fields
-  ['f-artifact-creator','f-artifact-location','f-artifact-power'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('f-artifact-type').value = '';
-  document.getElementById('f-artifact-status').value = '';
-  // faction fields
-  ['f-faction-symbol','f-faction-leader','f-faction-agenda','f-faction-cities'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('f-faction-type').value = '';
-  document.getElementById('f-faction-align').value = '';
-  // language fields
-  ['f-lang-family','f-lang-script','f-lang-speakers','f-lang-origin','f-lang-words'].forEach(id => document.getElementById(id).value='');
-  // event fields
-  ['f-event-date','f-event-cause','f-event-consequence','f-event-location'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('f-event-type').value = '';
-  // flora fields
-  ['f-flora-habitat','f-flora-use','f-flora-traits'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('f-flora-type').value = '';
-  // creature fields
-  ['f-creature-subtype','f-creature-habitat','f-creature-weakness','f-creature-myths','f-creature-region','f-creature-era'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('f-creature-danger').value = '';
-  document.getElementById('f-creature-behavior').value = '';
-  // deity fields
-  ['f-deity-domain','f-deity-region','f-deity-symbol','f-deity-totem','f-deity-ritual','f-deity-temples','f-deity-relations','f-deity-era'].forEach(id => document.getElementById(id).value='');
-  // culture fields
-  ['f-culture-subtype','f-culture-region','f-culture-religion','f-culture-language','f-culture-funerary','f-culture-trade','f-culture-era'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('f-culture-gov').value = '';
-  document.getElementById('links-search').value = '';
-  onCatChange(); renderLinksSelector(); renderSelectedLinks();
-  openModal('entry-modal'); document.getElementById('f-name').focus();
-}
-
-function openEditModal(id) {
-  editingId = id;
-  const e = state.entries.find(x=>x.id===id);
-  if (!e) return;
-  selectedLinks = [...(e.links||[])];
-  document.getElementById('modal-title-text').textContent = 'Editar Entrada';
-  document.getElementById('btn-delete').style.display = '';
-  document.getElementById('f-name').value = e.name;
-  document.getElementById('f-cat').value = e.cat;
-  document.getElementById('f-desc').value = e.desc||'';
-  // general
-  document.getElementById('f-subtype').value = e.subtype||'';
-  document.getElementById('f-continent-text').value = e.continentText||'';
-  document.getElementById('f-era-text').value = e.eraText||'';
-  document.getElementById('f-attr').value = e.attr||'';
-  // city
-  document.getElementById('f-city-kingdom').value = e.cityKingdom||'';
-  document.getElementById('f-city-type').value = e.cityType||'';
-  document.getElementById('f-city-status').value = e.cityStatus||'';
-  document.getElementById('f-city-ruler').value = e.cityRuler||'';
-  document.getElementById('f-city-pop').value = e.cityPop||'';
-  // era
-  document.getElementById('f-era-start').value = e.eraStart||'';
-  document.getElementById('f-era-end').value = e.eraEnd||'';
-  document.getElementById('f-era-start-event').value = e.eraStartEvent||'';
-  document.getElementById('f-era-end-event').value = e.eraEndEvent||'';
-  document.getElementById('f-era-tone').value = e.eraTone||'';
-  // artifact
-  document.getElementById('f-artifact-type').value = e.artifactType||'';
-  document.getElementById('f-artifact-status').value = e.artifactStatus||'';
-  document.getElementById('f-artifact-creator').value = e.artifactCreator||'';
-  document.getElementById('f-artifact-location').value = e.artifactLocation||'';
-  document.getElementById('f-artifact-power').value = e.artifactPower||'';
-  // faction
-  document.getElementById('f-faction-type').value = e.factionType||'';
-  document.getElementById('f-faction-align').value = e.factionAlign||'';
-  document.getElementById('f-faction-symbol').value = e.factionSymbol||'';
-  document.getElementById('f-faction-leader').value = e.factionLeader||'';
-  document.getElementById('f-faction-agenda').value = e.factionAgenda||'';
-  document.getElementById('f-faction-cities').value = e.factionCities||'';
-  // language
-  document.getElementById('f-lang-family').value = e.langFamily||'';
-  document.getElementById('f-lang-script').value = e.langScript||'';
-  document.getElementById('f-lang-speakers').value = e.langSpeakers||'';
-  document.getElementById('f-lang-origin').value = e.langOrigin||'';
-  document.getElementById('f-lang-words').value = e.langWords||'';
-  // event
-  document.getElementById('f-event-type').value = e.eventType||'';
-  document.getElementById('f-event-date').value = e.eventDate||'';
-  document.getElementById('f-event-cause').value = e.eventCause||'';
-  document.getElementById('f-event-consequence').value = e.eventConsequence||'';
-  document.getElementById('f-event-location').value = e.eventLocation||'';
-  // flora
-  document.getElementById('f-flora-type').value = e.floraType||'';
-  document.getElementById('f-flora-habitat').value = e.floraHabitat||'';
-  document.getElementById('f-flora-use').value = e.floraUse||'';
-  document.getElementById('f-flora-traits').value = e.floraTraits||'';
-  // creature
-  document.getElementById('f-creature-subtype').value = e.creatureSubtype||'';
-  document.getElementById('f-creature-danger').value = e.creatureDanger||'';
-  document.getElementById('f-creature-habitat').value = e.creatureHabitat||'';
-  document.getElementById('f-creature-behavior').value = e.creatureBehavior||'';
-  document.getElementById('f-creature-weakness').value = e.creatureWeakness||'';
-  document.getElementById('f-creature-myths').value = e.creatureMyths||'';
-  document.getElementById('f-creature-region').value = e.creatureRegion||'';
-  document.getElementById('f-creature-era').value = e.creatureEra||'';
-  // deity
-  document.getElementById('f-deity-domain').value = e.deityDomain||'';
-  document.getElementById('f-deity-region').value = e.deityRegion||'';
-  document.getElementById('f-deity-symbol').value = e.deitySymbol||'';
-  document.getElementById('f-deity-totem').value = e.deityTotem||'';
-  document.getElementById('f-deity-ritual').value = e.deityRitual||'';
-  document.getElementById('f-deity-temples').value = e.deityTemples||'';
-  document.getElementById('f-deity-relations').value = e.deityRelations||'';
-  document.getElementById('f-deity-era').value = e.deityEra||'';
-  // culture
-  document.getElementById('f-culture-subtype').value = e.cultureSubtype||'';
-  document.getElementById('f-culture-region').value = e.cultureRegion||'';
-  document.getElementById('f-culture-gov').value = e.cultureGov||'';
-  document.getElementById('f-culture-era').value = e.cultureEra||'';
-  document.getElementById('f-culture-religion').value = e.cultureReligion||'';
-  document.getElementById('f-culture-language').value = e.cultureLanguage||'';
-  document.getElementById('f-culture-funerary').value = e.cultureFunerary||'';
-  document.getElementById('f-culture-trade').value = e.cultureTrade||'';
-  document.getElementById('links-search').value = '';
-  onCatChange(); renderLinksSelector(); renderSelectedLinks();
-  openModal('entry-modal');
-}
-
-function saveEntry() {
-  const name = document.getElementById('f-name').value.trim();
-  const cat = document.getElementById('f-cat').value;
-  if (!name) { toast('Preencha o nome da entrada!'); return; }
-  if (!cat) { toast('Selecione uma categoria!'); return; }
-
-  const data = { name, cat, desc: document.getElementById('f-desc').value.trim(), links: [...selectedLinks] };
-
-  if (cat === 'city') {
-    data.cityKingdom = document.getElementById('f-city-kingdom').value.trim();
-    data.cityType = document.getElementById('f-city-type').value;
-    data.cityStatus = document.getElementById('f-city-status').value;
-    data.cityRuler = document.getElementById('f-city-ruler').value.trim();
-    data.cityPop = document.getElementById('f-city-pop').value.trim();
-  } else if (cat === 'era') {
-    data.eraStart = document.getElementById('f-era-start').value.trim();
-    data.eraEnd = document.getElementById('f-era-end').value.trim();
-    data.eraStartEvent = document.getElementById('f-era-start-event').value.trim();
-    data.eraEndEvent = document.getElementById('f-era-end-event').value.trim();
-    data.eraTone = document.getElementById('f-era-tone').value.trim();
-  } else if (cat === 'artifact') {
-    data.artifactType = document.getElementById('f-artifact-type').value;
-    data.artifactStatus = document.getElementById('f-artifact-status').value;
-    data.artifactCreator = document.getElementById('f-artifact-creator').value.trim();
-    data.artifactLocation = document.getElementById('f-artifact-location').value.trim();
-    data.artifactPower = document.getElementById('f-artifact-power').value.trim();
-  } else if (cat === 'faction') {
-    data.factionType = document.getElementById('f-faction-type').value;
-    data.factionAlign = document.getElementById('f-faction-align').value;
-    data.factionSymbol = document.getElementById('f-faction-symbol').value.trim();
-    data.factionLeader = document.getElementById('f-faction-leader').value.trim();
-    data.factionAgenda = document.getElementById('f-faction-agenda').value.trim();
-    data.factionCities = document.getElementById('f-faction-cities').value.trim();
-  } else if (cat === 'language') {
-    data.langFamily = document.getElementById('f-lang-family').value.trim();
-    data.langScript = document.getElementById('f-lang-script').value.trim();
-    data.langSpeakers = document.getElementById('f-lang-speakers').value.trim();
-    data.langOrigin = document.getElementById('f-lang-origin').value.trim();
-    data.langWords = document.getElementById('f-lang-words').value.trim();
-  } else if (cat === 'event') {
-    data.eventType = document.getElementById('f-event-type').value;
-    data.eventDate = document.getElementById('f-event-date').value.trim();
-    data.eventCause = document.getElementById('f-event-cause').value.trim();
-    data.eventConsequence = document.getElementById('f-event-consequence').value.trim();
-    data.eventLocation = document.getElementById('f-event-location').value.trim();
-  } else if (cat === 'flora') {
-    data.floraType = document.getElementById('f-flora-type').value;
-    data.floraHabitat = document.getElementById('f-flora-habitat').value.trim();
-    data.floraUse = document.getElementById('f-flora-use').value.trim();
-    data.floraTraits = document.getElementById('f-flora-traits').value.trim();
-  } else if (cat === 'creature') {
-    data.creatureSubtype = document.getElementById('f-creature-subtype').value.trim();
-    data.creatureDanger = document.getElementById('f-creature-danger').value;
-    data.creatureHabitat = document.getElementById('f-creature-habitat').value.trim();
-    data.creatureBehavior = document.getElementById('f-creature-behavior').value;
-    data.creatureWeakness = document.getElementById('f-creature-weakness').value.trim();
-    data.creatureMyths = document.getElementById('f-creature-myths').value.trim();
-    data.creatureRegion = document.getElementById('f-creature-region').value.trim();
-    data.creatureEra = document.getElementById('f-creature-era').value.trim();
-  } else if (cat === 'deity-sup' || cat === 'deity-cont') {
-    data.deityDomain = document.getElementById('f-deity-domain').value.trim();
-    data.deityRegion = document.getElementById('f-deity-region').value.trim();
-    data.deitySymbol = document.getElementById('f-deity-symbol').value.trim();
-    data.deityTotem = document.getElementById('f-deity-totem').value.trim();
-    data.deityRitual = document.getElementById('f-deity-ritual').value.trim();
-    data.deityTemples = document.getElementById('f-deity-temples').value.trim();
-    data.deityRelations = document.getElementById('f-deity-relations').value.trim();
-    data.deityEra = document.getElementById('f-deity-era').value.trim();
-  } else if (cat === 'culture') {
-    data.cultureSubtype = document.getElementById('f-culture-subtype').value.trim();
-    data.cultureRegion = document.getElementById('f-culture-region').value.trim();
-    data.cultureGov = document.getElementById('f-culture-gov').value;
-    data.cultureEra = document.getElementById('f-culture-era').value.trim();
-    data.cultureReligion = document.getElementById('f-culture-religion').value.trim();
-    data.cultureLanguage = document.getElementById('f-culture-language').value.trim();
-    data.cultureFunerary = document.getElementById('f-culture-funerary').value.trim();
-    data.cultureTrade = document.getElementById('f-culture-trade').value.trim();
-  } else {
-    data.subtype = document.getElementById('f-subtype').value.trim();
-    data.continentText = document.getElementById('f-continent-text').value.trim();
-    data.eraText = document.getElementById('f-era-text').value.trim();
-    data.attr = document.getElementById('f-attr').value.trim();
+  function handleDifficulty(v) {
+    setDifficulty(v);
+    if (!xpTouched) setXp(v * 20);
   }
 
-  if (editingId) {
-    const e = state.entries.find(x=>x.id===editingId);
-    Object.assign(e, data);
-    toast('✦ Entrada atualizada!');
-    currentEntryId = editingId;
-  } else {
-    const ne = { id:'e'+Date.now(), ...data };
-    state.entries.push(ne);
-    currentEntryId = ne.id;
-    toast('✦ Entrada criada!');
-  }
-  save(); closeModal('entry-modal'); renderList(); selectEntry(currentEntryId);
+  const previewGold = (DIFFICULTY_GOLD[difficulty] || 0) + (TYPE_GOLD_BONUS[type] || 0);
+
+  return (
+    <Panel className="gq-form-panel">
+      <h3 className="gq-panel-title">Nova missão</h3>
+      <div className="gq-form-grid">
+        <label className="gq-field gq-field-wide"><span>Nome</span><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Estudar Java por 30 minutos" /></label>
+        <label className="gq-field gq-field-wide"><span>Descrição</span><input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Opcional" /></label>
+        <label className="gq-field"><span>Categoria</span>
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.emoji} {c.key}</option>)}</select>
+        </label>
+        <label className="gq-field"><span>Tipo</span>
+          <select value={type} onChange={(e) => setType(e.target.value)}>{MISSION_TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}</select>
+        </label>
+        <label className="gq-field"><span>Dificuldade</span>
+          <select value={difficulty} onChange={(e) => handleDifficulty(Number(e.target.value))}>
+            <option value={1}>⭐ Fácil</option><option value={2}>⭐⭐ Média</option><option value={3}>⭐⭐⭐ Difícil</option>
+          </select>
+        </label>
+        <label className="gq-field"><span>XP</span><input type="number" min={5} value={xp} onChange={(e) => { setXp(Number(e.target.value)); setXpTouched(true); }} /></label>
+        <label className="gq-field gq-field-wide"><span>Meta relacionada</span>
+          <select value={goalId} onChange={(e) => setGoalId(e.target.value)}>
+            <option value="">Nenhuma</option>
+            {goals.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+        </label>
+      </div>
+      <p className="gq-mono gq-gold-preview"><Coins size={12} style={{ verticalAlign: "-2px" }} /> esta missão vai render +{previewGold} de ouro</p>
+      <div className="gq-form-actions">
+        <button className="gq-btn-ghost" onClick={onCancel}><X size={14} /> Cancelar</button>
+        <button className="gq-btn-primary" disabled={!name.trim()} onClick={() => onSubmit({ name: name.trim(), description: description.trim(), category, difficulty, type, xp, goalId })}>Criar missão</button>
+      </div>
+    </Panel>
+  );
 }
 
-function deleteEntry() {
-  if (!editingId) return;
-  if (!confirm('Excluir esta entrada? Esta ação não pode ser desfeita.')) return;
-  state.entries = state.entries.filter(e=>e.id!==editingId);
-  state.entries.forEach(e => { if(e.links) e.links=e.links.filter(l=>l!==editingId); });
-  currentEntryId = null; save(); closeModal('entry-modal'); renderList(); showWelcome();
-  toast('Entrada excluída.');
+function DiaryForm({ onSubmit }) {
+  const [text, setText] = useState("");
+  return (
+    <div>
+      <textarea
+        className="gq-diary-textarea"
+        rows={3}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Escreva sobre o seu dia, uma reflexão, ou um marco da sua jornada…"
+      />
+      <div className="gq-form-actions">
+        <button
+          className="gq-btn-primary"
+          disabled={!text.trim()}
+          onClick={() => { onSubmit(text); setText(""); }}
+        >
+          <Plus size={14} /> Adicionar ao diário
+        </button>
+      </div>
+    </div>
+  );
 }
 
-// LINKS
-function renderLinksSelector() {
-  const q = document.getElementById('links-search').value.toLowerCase();
-  const sel = document.getElementById('links-selector');
-  const opts = state.entries.filter(e=>e.id!==editingId&&(!q||e.name.toLowerCase().includes(q)));
-  if (!opts.length) { sel.innerHTML='<div style="padding:10px 14px;font-size:13px;color:var(--ink3);font-style:italic">Nenhuma entrada encontrada.</div>'; return; }
-  sel.innerHTML = opts.map(e => {
-    const checked = selectedLinks.includes(e.id);
-    return `<div class="links-selector-item ${checked?'checked':''}" onclick="toggleLink('${e.id}')">
-      <span class="check-icon">${checked?'✓':'·'}</span>
-      <span>${CAT_ICONS[e.cat]||''} ${escHtml(e.name)}</span>
-      <span class="tag ${e.cat}" style="margin-left:auto">${escHtml(CAT_LABELS[e.cat]||e.cat)}</span>
-    </div>`;
-  }).join('');
-}
-function filterLinksSelector() { renderLinksSelector(); }
-function toggleLink(id) {
-  selectedLinks = selectedLinks.includes(id) ? selectedLinks.filter(x=>x!==id) : [...selectedLinks,id];
-  renderLinksSelector(); renderSelectedLinks();
-}
-function renderSelectedLinks() {
-  const c = document.getElementById('selected-links');
-  if (!selectedLinks.length) { c.innerHTML=''; return; }
-  c.innerHTML = selectedLinks.map(id => {
-    const e = state.entries.find(x=>x.id===id);
-    if (!e) return '';
-    return `<div class="link-chip"><span>${CAT_ICONS[e.cat]||''}</span><span>${escHtml(e.name)}</span><span class="chip-remove" onclick="toggleLink('${e.id}')">✕</span></div>`;
-  }).join('');
-}
+/* ---------------------------------------------------------------------- */
+/* Estilo                                                                 */
+/* ---------------------------------------------------------------------- */
 
-// EXPORT
-function openExport() { openModal('export-modal'); }
-function exportData(format) {
-  closeModal('export-modal');
-  if (format==='json') {
-    downloadFile(JSON.stringify(state,null,2),'guia-do-mundo.json','application/json');
-  } else if (format==='md') {
-    let md=`# ${state.worldName}\n_${state.worldSub}_\n\n`;
-    ALL_CATS.forEach(cat=>{
-      const g=state.entries.filter(e=>e.cat===cat); if(!g.length) return;
-      md+=`## ${CAT_LABELS[cat]}\n\n`;
-      g.forEach(e=>{
-        md+=`### ${e.name}\n`;
-        if(e.cat==='era'){
-          if(e.eraStart||e.eraEnd) md+=`**Período:** ${e.eraStart||'?'} → ${e.eraEnd||'Presente'}  \n`;
-          if(e.eraTone) md+=`**Característica:** ${e.eraTone}  \n`;
-          if(e.eraStartEvent) md+=`**Início marcado por:** ${e.eraStartEvent}  \n`;
-          if(e.eraEndEvent) md+=`**Fim marcado por:** ${e.eraEndEvent}  \n`;
-        } else if(e.cat==='city'){
-          if(e.cityType) md+=`**Tipo:** ${e.cityType}  \n`;
-          if(e.cityKingdom) md+=`**Reino:** ${e.cityKingdom}  \n`;
-          if(e.cityStatus) md+=`**Status:** ${e.cityStatus}  \n`;
-          if(e.cityRuler) md+=`**Governante:** ${e.cityRuler}  \n`;
-        } else if(e.cat==='artifact'){
-          if(e.artifactType) md+=`**Tipo:** ${e.artifactType}  \n`;
-          if(e.artifactStatus) md+=`**Status:** ${e.artifactStatus}  \n`;
-          if(e.artifactCreator) md+=`**Criador:** ${e.artifactCreator}  \n`;
-          if(e.artifactLocation) md+=`**Localização:** ${e.artifactLocation}  \n`;
-          if(e.artifactPower) md+=`**Poder:** ${e.artifactPower}  \n`;
-        } else if(e.cat==='faction'){
-          if(e.factionType) md+=`**Tipo:** ${e.factionType}  \n`;
-          if(e.factionAlign) md+=`**Alinhamento:** ${e.factionAlign}  \n`;
-          if(e.factionSymbol) md+=`**Símbolo:** ${e.factionSymbol}  \n`;
-          if(e.factionLeader) md+=`**Líder:** ${e.factionLeader}  \n`;
-          if(e.factionAgenda) md+=`**Agenda:** ${e.factionAgenda}  \n`;
-          if(e.factionCities) md+=`**Territórios:** ${e.factionCities}  \n`;
-        } else if(e.cat==='language'){
-          if(e.langFamily) md+=`**Família:** ${e.langFamily}  \n`;
-          if(e.langScript) md+=`**Escrita:** ${e.langScript}  \n`;
-          if(e.langSpeakers) md+=`**Falantes:** ${e.langSpeakers}  \n`;
-          if(e.langOrigin) md+=`**Origem:** ${e.langOrigin}  \n`;
-          if(e.langWords) md+=`**Vocabulário:** ${e.langWords}  \n`;
-        } else if(e.cat==='event'){
-          if(e.eventType) md+=`**Tipo:** ${e.eventType}  \n`;
-          if(e.eventDate) md+=`**Data:** ${e.eventDate}  \n`;
-          if(e.eventCause) md+=`**Causa:** ${e.eventCause}  \n`;
-          if(e.eventConsequence) md+=`**Consequência:** ${e.eventConsequence}  \n`;
-          if(e.eventLocation) md+=`**Local:** ${e.eventLocation}  \n`;
-        } else if(e.cat==='flora'){
-          if(e.floraType) md+=`**Tipo:** ${e.floraType}  \n`;
-          if(e.floraHabitat) md+=`**Habitat:** ${e.floraHabitat}  \n`;
-          if(e.floraUse) md+=`**Uso:** ${e.floraUse}  \n`;
-          if(e.floraTraits) md+=`**Características:** ${e.floraTraits}  \n`;
-        } else {
-          if(e.subtype) md+=`**Subtipo:** ${e.subtype}  \n`;
-          if(e.continentText) md+=`**Região:** ${e.continentText}  \n`;
-        }
-        if(e.desc) md+=`\n${e.desc}\n`;
-        const lk=(e.links||[]).map(lid=>state.entries.find(x=>x.id===lid)?.name).filter(Boolean);
-        if(lk.length) md+=`\n**Ligações:** ${lk.join(', ')}  \n`;
-        md+='\n---\n\n';
-      });
-    });
-    downloadFile(md,'guia-do-mundo.md','text/markdown');
-  } else if (format==='txt') {
-    let txt=`${state.worldName}\n${'='.repeat(state.worldName.length)}\n\n`;
-    state.entries.forEach(e=>{
-      txt+=`[${CAT_LABELS[e.cat]}] ${e.name}\n`;
-      if(e.cat==='era'&&(e.eraStart||e.eraEnd)) txt+=`  Período: ${e.eraStart||'?'} → ${e.eraEnd||'Presente'}\n`;
-      if(e.cat==='city'&&e.cityKingdom) txt+=`  Reino: ${e.cityKingdom}\n`;
-      if(e.cat==='artifact'&&e.artifactPower) txt+=`  Poder: ${e.artifactPower}\n`;
-      if(e.cat==='faction'&&e.factionAgenda) txt+=`  Agenda: ${e.factionAgenda}\n`;
-      if(e.cat==='event'&&e.eventDate) txt+=`  Data: ${e.eventDate}\n`;
-      if(e.desc) txt+=`\n${e.desc}\n`;
-      txt+='\n'+'-'.repeat(40)+'\n\n';
-    });
-    downloadFile(txt,'guia-do-mundo.txt','text/plain');
-  } else if (format==='html') {
-    let h=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${escHtml(state.worldName)}</title>
-<style>body{font-family:Georgia,serif;max-width:820px;margin:40px auto;padding:0 20px;background:#fdfaf4;color:#2a2010}
-h1{font-size:2em;border-bottom:2px solid #8a6a20;padding-bottom:8px}h2{color:#6a4a10;margin-top:2em;font-size:1.4em}
-h3{color:#3a2a08;margin:1.5em 0 0.3em}.meta{color:#7a6a40;font-size:0.9em;margin-bottom:.5em}
-.desc{line-height:1.8}.badge{display:inline-block;background:#f0e8d0;border:1px solid #c8a040;border-radius:4px;padding:2px 8px;font-size:.85em;margin:2px}
-.era-bar{height:8px;background:linear-gradient(90deg,#8a6a20,#e8b460);border-radius:4px;margin:8px 0}
-hr{border:none;border-top:1px solid #d0b870;margin:1.5em 0}</style></head><body>
-<h1>${escHtml(state.worldName)}</h1><p><em>${escHtml(state.worldSub)}</em></p>`;
-    ALL_CATS.forEach(cat=>{
-      const g=state.entries.filter(e=>e.cat===cat); if(!g.length) return;
-      h+=`<h2>${escHtml(CAT_LABELS[cat])}</h2>`;
-      g.forEach(e=>{
-        h+=`<h3>${escHtml(e.name)}</h3><div class="meta">`;
-        if(e.cat==='era'){
-          if(e.eraStart||e.eraEnd) h+=`<strong>${escHtml(e.eraStart||'?')} → ${escHtml(e.eraEnd||'Presente')}</strong>`;
-          if(e.eraTone) h+=` &nbsp; ${escHtml(e.eraTone)}`;
-        } else if(e.cat==='city'){
-          if(e.cityType) h+=`<strong>${escHtml(e.cityType)}</strong> &nbsp;`;
-          if(e.cityKingdom) h+=`🗺 ${escHtml(e.cityKingdom)} &nbsp;`;
-          if(e.cityStatus) h+=`[${escHtml(e.cityStatus)}]`;
-        } else if(e.cat==='artifact'){
-          if(e.artifactType) h+=`<strong>${escHtml(e.artifactType)}</strong> &nbsp;`;
-          if(e.artifactStatus) h+=`[${escHtml(e.artifactStatus)}] &nbsp;`;
-          if(e.artifactPower) h+=`⚡ ${escHtml(e.artifactPower)}`;
-        } else if(e.cat==='faction'){
-          if(e.factionType) h+=`<strong>${escHtml(e.factionType)}</strong> &nbsp;`;
-          if(e.factionAlign) h+=`[${escHtml(e.factionAlign)}] &nbsp;`;
-          if(e.factionLeader) h+=`👑 ${escHtml(e.factionLeader)}`;
-        } else if(e.cat==='language'){
-          if(e.langFamily) h+=`<strong>${escHtml(e.langFamily)}</strong> &nbsp;`;
-          if(e.langScript) h+=`📜 ${escHtml(e.langScript)}`;
-        } else if(e.cat==='event'){
-          if(e.eventType) h+=`<strong>${escHtml(e.eventType)}</strong> &nbsp;`;
-          if(e.eventDate) h+=`📅 ${escHtml(e.eventDate)}`;
-        } else if(e.cat==='flora'){
-          if(e.floraType) h+=`<strong>${escHtml(e.floraType)}</strong> &nbsp;`;
-          if(e.floraHabitat) h+=`🌍 ${escHtml(e.floraHabitat)}`;
-        } else {
-          if(e.subtype) h+=`<strong>${escHtml(e.subtype)}</strong> &nbsp;`;
-          if(e.continentText) h+=`🗺 ${escHtml(e.continentText)} &nbsp;`;
-        }
-        h+=`</div>`;
-        if(e.cat==='era'&&(e.eraStart||e.eraEnd)) h+=`<div class="era-bar"></div>`;
-        if(e.desc) h+=`<p class="desc">${escHtml(e.desc).replace(/\n/g,'<br>')}</p>`;
-        const lk=(e.links||[]).map(lid=>state.entries.find(x=>x.id===lid)?.name).filter(Boolean);
-        if(lk.length) h+=`<p>🔗 ${lk.map(n=>`<span class="badge">${escHtml(n)}</span>`).join(' ')}</p>`;
-        h+=`<hr>`;
-      });
-    });
-    h+=`</body></html>`;
-    downloadFile(h,'guia-do-mundo.html','text/html');
-  }
-  toast('✦ Exportado com sucesso!');
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+.gq-root {
+  --bg: #12141c;
+  --bg-alt: #171a24;
+  --panel: #1a1e2a;
+  --panel-border: #2b3143;
+  --gold: #e3b341;
+  --teal: #5b9aa0;
+  --garnet: #c1443c;
+  --sage: #7c9473;
+  --sand: #c9a66b;
+  --plum: #8b6f9e;
+  --text: #e9e6da;
+  --text-dim: #9aa0b4;
+  --text-faint: #5f6478;
+  --font-display: 'Cinzel', serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  padding: 20px;
+  border-radius: 6px;
+  max-width: 980px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
+.gq-root * { box-sizing: border-box; }
 
-function importData(input) {
-  if(!input.files||!input.files[0]) return;
-  const reader=new FileReader();
-  reader.onload=(ev)=>{
-    try {
-      const imp=JSON.parse(ev.target.result);
-      if(!imp.entries) throw new Error('');
-      if(!confirm(`Importar ${imp.entries.length} entradas? Os dados atuais serão substituídos.`)) return;
-      state=imp; save(); load(); renderList(); showWelcome(); closeModal('export-modal');
-      toast(`✦ ${imp.entries.length} entradas importadas!`);
-    } catch(e) { toast('Erro: arquivo JSON inválido.'); }
-    input.value='';
-  };
-  reader.readAsText(input.files[0]);
-}
+.gq-loading { display:flex; align-items:center; justify-content:center; min-height: 200px; }
+.gq-loading-text { font-family: var(--font-display); color: var(--text-dim); letter-spacing: 0.05em; }
 
-function downloadFile(content,filename,type) {
-  const blob=new Blob([content],{type});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download=filename;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-}
+.gq-panel { position: relative; background: var(--panel); border: 1px solid var(--panel-border); padding: 18px; margin-bottom: 14px; }
+.gq-corner { position: absolute; width: 10px; height: 10px; pointer-events: none; opacity: 0.55; }
+.gq-corner-tl { top: -1px; left: -1px; border-top: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+.gq-corner-tr { top: -1px; right: -1px; border-top: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+.gq-corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+.gq-corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+.gq-owned-panel { border-color: var(--sage); }
+.gq-locked-panel { opacity: 0.72; }
 
-function openSettings() {
-  document.getElementById('s-world-name').value=state.worldName;
-  document.getElementById('s-world-sub').value=state.worldSub;
-  openModal('settings-modal');
-}
-function saveSettings() {
-  state.worldName=document.getElementById('s-world-name').value.trim()||'Guia do Mundo';
-  state.worldSub=document.getElementById('s-world-sub').value.trim()||'';
-  document.getElementById('world-title-display').childNodes[0].textContent=state.worldName;
-  document.getElementById('world-subtitle-display').textContent=state.worldSub;
-  document.title=state.worldName;
-  save(); closeModal('settings-modal'); toast('✦ Configurações salvas!');
-}
+.gq-panel-title { font-family: var(--font-display); font-size: 15px; letter-spacing: 0.03em; color: var(--text); margin: 0 0 14px 0; font-weight: 600; }
+.gq-h2 { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin: 0; letter-spacing: 0.02em; }
+.gq-empty { color: var(--text-dim); font-size: 13px; line-height: 1.6; margin: 0; }
+.gq-mono { font-family: var(--font-mono); }
+.gq-tab-side-info { font-size: 12px; color: var(--text-dim); }
 
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+.gq-header-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.gq-avatar { width: 56px; height: 56px; border-radius: 4px; flex-shrink: 0; background: linear-gradient(135deg, var(--gold), #a8842f); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 24px; font-weight: 700; color: #14161f; border: 1px solid var(--panel-border); }
+.gq-header-main { flex: 1; min-width: 220px; }
+.gq-header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.gq-name-input { background: transparent; border: none; color: var(--text); font-family: var(--font-display); font-size: 17px; font-weight: 600; padding: 2px 4px; border-bottom: 1px solid transparent; max-width: 220px; }
+.gq-name-input:focus { outline: none; border-bottom: 1px solid var(--gold); }
+.gq-title-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gold); background: transparent; border: 1px solid var(--gold); padding: 3px 9px; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; font-family: var(--font-body); }
+.gq-title-tag:hover { background: rgba(227,179,65,0.1); }
+.gq-level-row { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+.gq-level-num { color: var(--gold); font-weight: 600; }
+.gq-header-stats { display: flex; flex-direction: column; gap: 8px; }
+.gq-stat-chip { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 13px; color: var(--text-dim); background: var(--bg-alt); border: 1px solid var(--panel-border); padding: 5px 10px; }
+.gq-gold-chip { color: var(--gold); border-color: rgba(227,179,65,0.35); }
 
-document.querySelectorAll('.modal-overlay').forEach(o=>{
-  o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); });
-});
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
-  if((e.ctrlKey||e.metaKey)&&e.key==='n') { e.preventDefault(); openAddModal(); }
-});
+.gq-segundo-folego-btn { margin-top: 14px; display: flex; align-items: center; gap: 8px; background: var(--bg-alt); border: 1px solid var(--gold); color: var(--gold); padding: 9px 14px; font-family: var(--font-body); font-size: 13px; font-weight: 500; cursor: pointer; width: 100%; justify-content: center; }
+.gq-segundo-folego-btn:hover { background: rgba(227,179,65,0.1); }
 
-let toastTimer;
-function toast(msg) {
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('show');
-  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
-}
+.gq-xpbar { position: relative; width: 100%; background: var(--bg-alt); border: 1px solid var(--panel-border); overflow: hidden; }
+.gq-xpbar-fill { position: absolute; inset: 0; width: 0; background: linear-gradient(90deg, #a8842f, var(--gold)); box-shadow: 0 0 8px rgba(227,179,65,0.5); transition: width 0.5s ease; }
+.gq-xpbar-ticks { position: absolute; inset: 0; background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(0,0,0,0.35) 10%); }
 
-function escHtml(str) {
-  if(!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+.gq-levelup { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 14px; letter-spacing: 0.03em; padding: 10px 20px; display: flex; align-items: center; gap: 8px; z-index: 50; box-shadow: 0 0 24px rgba(227,179,65,0.35); animation: gq-flash 3.2s ease forwards; }
+@keyframes gq-flash { 0% { opacity: 0; transform: translate(-50%, -10px); } 10% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -6px); } }
 
-load(); renderList();
-</script>
-</body>
-</html>
+.gq-toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--sage); color: var(--text); font-size: 13px; padding: 10px 18px; z-index: 50; box-shadow: 0 0 16px rgba(0,0,0,0.4); animation: gq-toast-anim 2.6s ease forwards; }
+@keyframes gq-toast-anim { 0% { opacity: 0; transform: translate(-50%, 8px); } 12% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; } 100% { opacity: 0; } }
+
+.gq-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--panel-border); overflow-x: auto; }
+.gq-tab { display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--text-dim); font-family: var(--font-body); font-size: 13px; font-weight: 500; padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+.gq-tab:hover { color: var(--text); }
+.gq-tab-active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+
+.gq-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.gq-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.gq-span-2 { grid-column: 1 / -1; }
+@media (max-width: 720px) { .gq-grid-2, .gq-grid-4 { grid-template-columns: 1fr; } }
+
+.gq-stat-big { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.gq-stat-big span { font-family: var(--font-display); font-size: 26px; color: var(--gold); font-weight: 700; }
+.gq-stat-big label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+.gq-mission-mini-list { display: flex; flex-direction: column; gap: 6px; }
+.gq-mini-mission { display: flex; align-items: center; gap: 8px; background: var(--bg-alt); border: 1px solid var(--panel-border); padding: 9px 10px; color: var(--text); font-size: 13px; cursor: pointer; text-align: left; width: 100%; }
+.gq-mini-mission:disabled { cursor: default; }
+.gq-mini-mission-done { opacity: 0.55; }
+.gq-mini-mission-static { cursor: default; justify-content: space-between; }
+.gq-mini-mission-name { flex: 1; }
+.gq-mini-mission-xp { font-family: var(--font-mono); font-size: 11px; color: var(--gold); }
+
+.gq-goal-mini-list { display: flex; flex-direction: column; gap: 12px; }
+.gq-goal-mini-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+
+.gq-progress-bar { width: 100%; height: 8px; background: var(--bg-alt); border: 1px solid var(--panel-border); }
+.gq-progress-fill { height: 100%; transition: width 0.4s ease; }
+
+.gq-section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+.gq-btn-primary { display: flex; align-items: center; justify-content: center; gap: 6px; background: var(--gold); color: #14161f; border: none; font-family: var(--font-body); font-weight: 600; font-size: 13px; padding: 9px 14px; cursor: pointer; }
+.gq-btn-primary:disabled { opacity: 0.4; cursor: default; }
+.gq-full-width { width: 100%; margin-top: 12px; }
+.gq-btn-ghost { display: flex; align-items: center; gap: 6px; background: transparent; color: var(--text-dim); border: 1px solid var(--panel-border); font-size: 13px; padding: 9px 14px; cursor: pointer; }
+.gq-btn-ghost:disabled { opacity: 0.4; cursor: default; }
+.gq-icon-btn { background: transparent; border: none; color: var(--text-faint); cursor: pointer; padding: 4px; }
+.gq-icon-btn:hover { color: var(--garnet); }
+
+.gq-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.gq-cat-tag { font-size: 11px; border: 1px solid; padding: 3px 8px; letter-spacing: 0.02em; white-space: nowrap; }
+.gq-card-title { font-family: var(--font-display); font-size: 16px; margin: 0 0 4px 0; font-weight: 600; }
+.gq-card-desc { font-size: 12px; color: var(--text-dim); margin: 0 0 8px 0; line-height: 1.5; }
+.gq-card-meta-row { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.gq-stars { display: inline-flex; gap: 2px; align-items: center; }
+.gq-deadline { font-size: 11px; color: var(--text-faint); }
+.gq-goal-footer { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-dim); }
+.gq-manual-progress { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.gq-manual-progress label { font-size: 11px; color: var(--text-faint); }
+.gq-manual-progress input[type="range"] { width: 100%; accent-color: var(--gold); }
+
+.gq-filters { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.gq-select { background: var(--bg-alt); color: var(--text); border: 1px solid var(--panel-border); padding: 8px 10px; font-size: 13px; font-family: var(--font-body); }
+
+.gq-mission-list { display: flex; flex-direction: column; gap: 8px; }
+.gq-mission-card { display: flex; align-items: flex-start; gap: 12px; background: var(--panel); border: 1px solid var(--panel-border); border-left: 3px solid var(--gold); padding: 12px 14px; }
+.gq-check-btn { background: transparent; border: none; color: var(--text-dim); cursor: pointer; padding: 2px; flex-shrink: 0; }
+.gq-check-btn:disabled { cursor: default; }
+.gq-mission-body { flex: 1; min-width: 0; }
+.gq-mission-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.gq-mission-name { font-size: 14px; font-weight: 500; }
+.gq-mission-xp { font-size: 12px; color: var(--gold); white-space: nowrap; }
+.gq-mission-tags { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.gq-type-tag { font-size: 11px; color: var(--text-dim); background: var(--bg-alt); padding: 3px 8px; border: 1px solid var(--panel-border); }
+.gq-goal-tag { font-size: 11px; color: var(--sand); }
+.gq-done-tag { font-size: 11px; color: var(--sage); font-style: italic; }
+
+.gq-form-panel { border-color: var(--gold); }
+.gq-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.gq-field { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--text-dim); }
+.gq-field-wide { grid-column: 1 / -1; }
+.gq-field input, .gq-field select { background: var(--bg-alt); color: var(--text); border: 1px solid var(--panel-border); padding: 9px 10px; font-size: 13px; font-family: var(--font-body); }
+.gq-field input:focus, .gq-field select:focus { outline: none; border-color: var(--gold); }
+.gq-gold-preview { color: var(--gold); font-size: 12px; margin: 12px 0 0 0; }
+.gq-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+@media (max-width: 600px) { .gq-form-grid { grid-template-columns: 1fr; } }
+
+.gq-attr-list { display: flex; flex-direction: column; gap: 14px; }
+.gq-attr-row { display: grid; grid-template-columns: 140px 1fr 36px; align-items: center; gap: 12px; }
+.gq-attr-label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.gq-attr-bar { height: 10px; }
+.gq-attr-value { font-size: 13px; color: var(--text-dim); text-align: right; }
+@media (max-width: 600px) { .gq-attr-row { grid-template-columns: 110px 1fr 30px; } }
+
+.gq-skill-emoji { font-size: 22px; }
+.gq-cost-tag { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--gold); }
+.gq-owned-tag { font-size: 11px; color: var(--sage); border: 1px solid var(--sage); padding: 3px 8px; }
+.gq-locked-tag { font-size: 11px; color: var(--text-faint); }
+.gq-active-status { font-size: 11px; color: var(--text-faint); margin: 10px 0 0 0; }
+.gq-item-actions { display: flex; gap: 10px; margin-top: 12px; }
+.gq-item-actions .gq-btn-ghost, .gq-item-actions .gq-btn-primary { flex: 1; }
+
+.gq-title-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.gq-title-chip { display: flex; align-items: center; gap: 6px; background: var(--bg-alt); border: 1px solid var(--panel-border); color: var(--text); font-size: 12px; font-family: var(--font-body); padding: 7px 11px; cursor: pointer; }
+.gq-title-chip:hover:not(:disabled) { border-color: var(--gold); }
+.gq-title-chip .gq-title-lvl { font-family: var(--font-mono); font-size: 10px; color: var(--gold); }
+.gq-title-chip:disabled { cursor: default; }
+.gq-title-locked { opacity: 0.45; color: var(--text-faint); }
+.gq-title-owned { border-color: var(--sage); color: var(--text); }
+.gq-title-selected { border-color: var(--gold); background: rgba(227,179,65,0.12); color: var(--gold); }
+.gq-title-buyable { border-style: dashed; border-color: var(--sand); color: var(--sand); }
+.gq-title-buyable:disabled { opacity: 0.5; border-style: dashed; }
+.gq-title-cost { font-size: 10px; color: var(--gold); margin-left: 2px; }
+
+.gq-diary-list { display: flex; flex-direction: column; gap: 8px; }
+.gq-diary-entry { display: flex; align-items: flex-start; gap: 10px; background: var(--panel); border: 1px solid var(--panel-border); border-left: 3px solid var(--sand); padding: 11px 14px; }
+.gq-diary-auto { border-left-color: var(--gold); }
+.gq-diary-icon { font-size: 16px; line-height: 1.4; flex-shrink: 0; }
+.gq-diary-body { flex: 1; min-width: 0; }
+.gq-diary-text { margin: 0 0 4px 0; font-size: 13px; color: var(--text); line-height: 1.5; }
+.gq-diary-date { font-size: 10px; color: var(--text-faint); }
+.gq-diary-textarea { width: 100%; background: var(--bg-alt); color: var(--text); border: 1px solid var(--panel-border); padding: 10px; font-size: 13px; font-family: var(--font-body); resize: vertical; }
+.gq-diary-textarea:focus { outline: none; border-color: var(--gold); }
+
+.gq-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--panel-border); font-size: 11px; color: var(--text-faint); }
+.gq-reset-link { background: transparent; border: none; color: var(--text-faint); text-decoration: underline; cursor: pointer; font-size: 11px; }
+.gq-reset-link:hover { color: var(--garnet); }
+`;
