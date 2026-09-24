@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fichas de Personagem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e17; --panel:#0f1524; --panel2:#121a2d; --line:#3a3320;
+  --gold:#c6a24d; --gold-dim:#8a7238; --parch:#e7ddc4; --parch-ink:#3a3020;
+  --ink:#d9d3bd; --ink-dim:#93917f;
+  --nat:#4f8a5c; --ind:#4a7fb5; --anc:#8a5cb5; --div:#b58a3c;
+  box-sizing:border-box;
+}
+*{box-sizing:inherit;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'EB Garamond', Georgia, serif; font-size:16px; line-height:1.5;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  background-image:
+    radial-gradient(circle at 10% 5%, #10182a 0%, transparent 40%),
+    radial-gradient(circle at 90% 95%, #10182a 0%, transparent 40%);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){ }
+}
+h1,h2,h3,.label{ font-family:'Cinzel', serif; letter-spacing:.03em; color:var(--gold); }
+.wrap{ max-width:1100px; margin:0 auto; padding:28px 18px 60px; }
+
+/* ---------- top bar ---------- */
+.topbar{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:26px; }
+.topbar h1{ font-size:1.6rem; margin:0; font-weight:600; }
+.topbar .sub{ color:var(--ink-dim); font-size:.85rem; margin-top:2px; font-style:italic; }
+.btn{
+  font-family:'Cinzel', serif; font-size:.78rem; letter-spacing:.05em;
+  background:linear-gradient(180deg,#1a2338,#141b2c); color:var(--gold);
+  border:1px solid var(--gold-dim); padding:10px 18px; cursor:pointer;
+  border-radius:2px; transition:border-color .15s, color .15s;
+}
+.btn:hover{ border-color:var(--gold); color:#f0dca0; }
+.btn.primary{ background:linear-gradient(180deg,#2a2210,#1c1608); }
+.btn.danger{ border-color:#7a3a3a; color:#c97d7d; }
+.btn.danger:hover{ border-color:#c97d7d; color:#e8a5a5; }
+.btn.ghost{ background:transparent; }
+
+/* ---------- gallery ---------- */
+.grid-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:16px; }
+.card{
+  background:var(--panel); border:1px solid var(--gold-dim); border-radius:3px;
+  padding:14px; cursor:pointer; position:relative; transition:transform .12s, border-color .12s;
+}
+.card:hover{ transform:translateY(-2px); border-color:var(--gold); }
+.card .photo{
+  width:100%; aspect-ratio:1; background:linear-gradient(160deg,#2b2f38,#1a1d24);
+  border:1px solid var(--gold-dim); margin-bottom:10px; display:flex; align-items:center;
+  justify-content:center; overflow:hidden; border-radius:2px;
+}
+.card .photo img{ width:100%; height:100%; object-fit:cover; }
+.card .photo svg{ width:44%; opacity:.35; }
+.card h3{ margin:0 0 3px; font-size:1rem; color:var(--parch); }
+.card .meta{ font-size:.78rem; color:var(--ink-dim); font-style:italic; }
+.card .rank-tag{
+  position:absolute; top:10px; right:10px; background:#000a; border:1px solid var(--gold-dim);
+  color:var(--gold); font-family:'Cinzel',serif; font-size:.65rem; padding:2px 7px; border-radius:2px;
+}
+.card .del{
+  position:absolute; bottom:10px; right:10px; background:none; border:none; color:var(--ink-dim);
+  font-size:1.1rem; cursor:pointer; opacity:.5;
+}
+.card .del:hover{ opacity:1; color:#c97d7d; }
+.empty{ color:var(--ink-dim); font-style:italic; text-align:center; padding:60px 20px; border:1px dashed var(--gold-dim); border-radius:3px; }
+.newcard{ display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px; color:var(--ink-dim); border-style:dashed; }
+.newcard .plus{ font-size:2rem; color:var(--gold-dim); }
+
+/* ---------- section shell ---------- */
+.section{
+  background:var(--panel); border:1px solid var(--gold-dim); border-radius:3px;
+  padding:18px 20px 22px; margin-bottom:16px;
+}
+.section h2{ font-size:1.05rem; margin:0 0 14px; display:flex; align-items:center; gap:9px; font-weight:600; }
+.section h2 .ic{ font-size:1.1rem; }
+.section-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:760px){ .section-row{ grid-template-columns:1fr; } }
+
+/* ---------- form fields ---------- */
+label.f{ display:block; font-size:.72rem; letter-spacing:.06em; color:var(--gold-dim); margin-bottom:4px; text-transform:uppercase; font-family:'Cinzel',serif; }
+input[type=text], textarea, select{
+  width:100%; background:var(--panel2); border:none; border-bottom:1px solid var(--line);
+  color:var(--parch); font-family:'EB Garamond', serif; font-size:1rem; padding:7px 4px;
+}
+input[type=text]:focus, textarea:focus, select:focus{ outline:none; border-bottom-color:var(--gold); }
+textarea{ resize:vertical; min-height:70px; line-height:1.7; }
+.field{ margin-bottom:14px; }
+select{ cursor:pointer; appearance:none; -webkit-appearance:none; background-image:linear-gradient(45deg,transparent 50%,var(--gold-dim) 50%),linear-gradient(135deg,var(--gold-dim) 50%,transparent 50%); background-position:calc(100% - 14px) center, calc(100% - 9px) center; background-size:5px 5px,5px 5px; background-repeat:no-repeat; padding-right:24px; }
+select option{ background:var(--panel2); color:var(--parch); }
+
+.spec-row{ display:flex; align-items:center; gap:10px; }
+.spec-lbl{ font-size:.78rem; color:var(--ink-dim); font-family:'Cinzel',serif; flex:none; letter-spacing:.02em; }
+.spec-row input[type=range]{ flex:1; accent-color:var(--gold); background:transparent; }
+.spec-val{ flex:none; width:96px; text-align:right; font-size:.8rem; color:var(--gold); font-style:italic; }
+
+/* photo + identity */
+.identity{ display:flex; gap:18px; align-items:flex-start; }
+.photo-box{
+  width:130px; height:130px; flex:none; border:1px solid var(--gold-dim); border-radius:2px;
+  background:linear-gradient(160deg,#2b2f38,#1a1d24); position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.photo-box img{ width:100%; height:100%; object-fit:cover; }
+.photo-box svg{ width:50%; opacity:.3; }
+.photo-box .cap{ position:absolute; bottom:0; left:0; right:0; background:#000a; font-size:.6rem; text-align:center; padding:3px 0; color:var(--ink-dim); font-family:'Cinzel',serif; letter-spacing:.05em; }
+.identity-fields{ flex:1; }
+
+/* attribute radar chart */
+.attr-layout{ display:flex; gap:28px; flex-wrap:wrap; align-items:center; }
+.attr-chart{ flex:none; width:280px; max-width:100%; }
+.attr-chart svg{ width:100%; height:auto; overflow:visible; }
+.attr-chart .ring{ fill:none; stroke:#26314a; stroke-width:1; }
+.attr-chart .axis{ stroke:#26314a; stroke-width:1; }
+.attr-chart .poly{ fill:rgba(198,162,77,.18); stroke:var(--gold); stroke-width:2; }
+.attr-chart .pt{ fill:var(--gold); }
+.attr-chart .axlabel{ font-family:'Cinzel',serif; font-size:9px; fill:var(--ink-dim); }
+.attr-chart .axval{ font-family:'EB Garamond',serif; font-size:11px; fill:var(--parch); font-weight:600; }
+.attr-list{ flex:1; min-width:220px; }
+.attr-row{ display:flex; align-items:center; gap:12px; margin-bottom:9px; }
+.attr-row .aname{ width:150px; font-family:'Cinzel',serif; font-size:.76rem; color:var(--parch); flex:none; letter-spacing:.02em; }
+.attr-row input[type=number]{
+  width:70px; background:var(--panel2); border:none; border-bottom:1px solid var(--line);
+  color:var(--gold); font-family:'Cinzel',serif; font-size:.9rem; padding:5px 6px; text-align:center;
+}
+.attr-row input[type=number]:focus{ outline:none; border-bottom-color:var(--gold); }
+
+/* exencia */
+.exe-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+@media(max-width:900px){ .exe-grid{ grid-template-columns:repeat(2,1fr); } }
+.exe-card{ border:1px solid; border-radius:3px; padding:12px 12px 8px; background:#0d1220; }
+.exe-card h4{ margin:0 0 10px; font-family:'Cinzel',serif; font-size:.85rem; text-align:center; }
+.exe-card .stat{ margin-bottom:12px; }
+.exe-card .stat .lbl{ font-size:.62rem; letter-spacing:.05em; color:var(--ink-dim); text-transform:uppercase; margin-bottom:5px; font-family:'Cinzel',serif; }
+.exe-card .stat .inputs{ display:flex; align-items:center; gap:4px; margin-bottom:5px; }
+.exe-card .stat input[type=text]{
+  width:64px; background:var(--panel2); border:none; border-bottom:1px solid var(--line);
+  color:var(--parch); font-size:.88rem; padding:4px 3px; text-align:center; letter-spacing:.02em;
+}
+.exe-card .stat input[type=text]:focus{ outline:none; border-bottom-color:var(--gold); background:#182036; }
+.exe-card .stat .slash{ color:var(--ink-dim); font-size:.8rem; }
+.exe-card .gbar{ height:8px; background:#1c2333; border:1px solid #2b3450; border-radius:1px; overflow:hidden; }
+.exe-card .gbar .fill{ height:100%; width:0%; }
+.exe-nat{ border-color:var(--nat); } .exe-nat h4{ color:var(--nat); } .exe-nat .fill{ background:var(--nat); }
+.exe-ind{ border-color:var(--ind); } .exe-ind h4{ color:var(--ind); } .exe-ind .fill{ background:var(--ind); }
+.exe-anc{ border-color:var(--anc); } .exe-anc h4{ color:var(--anc); } .exe-anc .fill{ background:var(--anc); }
+.exe-div{ border-color:var(--div); } .exe-div h4{ color:var(--div); } .exe-div .fill{ background:var(--div); }
+
+/* tecnicas */
+.tec-col{ display:flex; flex-direction:column; gap:8px; }
+.rel-group{ margin-bottom:18px; }
+.rel-group:last-child{ margin-bottom:0; }
+.tec-item{ display:flex; align-items:flex-start; gap:8px; }
+.tec-item .dia{ color:var(--gold-dim); flex:none; margin-top:9px; }
+.tec-item textarea{
+  flex:1; resize:none; overflow:hidden; min-height:38px; line-height:1.55;
+  padding:8px 6px; border:none; border-bottom:1px solid var(--line);
+  background:var(--panel2); color:var(--parch); font-family:'EB Garamond',serif; font-size:1rem;
+}
+.tec-item textarea:focus{ outline:none; border-bottom-color:var(--gold); background:#141c30; }
+.tec-item .rm{ background:none; border:none; color:var(--ink-dim); cursor:pointer; flex:none; margin-top:6px; font-size:1.1rem; }
+.tec-item .rm:hover{ color:#c97d7d; }
+.addline{ background:none; border:none; color:var(--gold-dim); font-family:'Cinzel',serif; font-size:.75rem; cursor:pointer; margin-top:6px; padding:0; }
+.addline:hover{ color:var(--gold); }
+
+/* inventario */
+.inv-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(64px,1fr)); gap:8px; }
+.inv-slot{ aspect-ratio:1; border:1px solid var(--line); background:var(--panel2); border-radius:2px; cursor:pointer; display:flex; align-items:center; justify-content:center; text-align:center; font-size:.65rem; color:var(--ink-dim); padding:3px; }
+.inv-slot:hover{ border-color:var(--gold-dim); }
+.inv-slot.filled{ color:var(--parch); border-color:var(--gold-dim); }
+
+/* action bar */
+.actions{ display:flex; justify-content:space-between; gap:10px; margin-top:22px; flex-wrap:wrap; }
+.saved-flash{ color:var(--nat); font-size:.8rem; font-style:italic; align-self:center; opacity:0; transition:opacity .3s; }
+.saved-flash.show{ opacity:1; }
+
+.hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- GALLERY VIEW -->
+  <div id="view-gallery">
+    <div class="topbar">
+      <div>
+        <h1>Fichas de Personagem</h1>
+        <div class="sub">Seus aventureiros, guardados aqui.</div>
+      </div>
+      <button class="btn primary" id="btn-new">+ Novo Personagem</button>
+    </div>
+    <div id="gallery" class="grid-gallery"></div>
+  </div>
+
+  <!-- EDITOR VIEW -->
+  <div id="view-editor" class="hidden">
+    <div class="topbar">
+      <button class="btn ghost" id="btn-back">&larr; Voltar</button>
+      <div class="sub" id="edit-title" style="font-family:'Cinzel',serif;color:var(--gold);"></div>
+    </div>
+
+    <div class="section">
+      <h2><span class="ic">&#9670;</span> Identidade</h2>
+      <div class="identity">
+        <div class="photo-box" id="photo-box">
+          <svg viewBox="0 0 24 24" fill="var(--ink-dim)"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.24-8 5v2h16v-2c0-2.76-3.6-5-8-5Z"/></svg>
+          <div class="cap">Foto</div>
+          <input type="file" id="photo-input" accept="image/*" style="display:none;">
+        </div>
+        <div class="identity-fields">
+          <div class="section-row">
+            <div class="field"><label class="f">Nome</label><input type="text" id="f-nome"></div>
+            <div class="field"><label class="f">Rank</label><input type="text" id="f-rank" placeholder="Ex: Dragão Ancião 52"></div>
+          </div>
+          <div class="field"><label class="f">Organização</label><input type="text" id="f-org"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="ic">&#9878;</span> Rank &amp; Especialização</h2>
+      <div class="section-row">
+        <div class="field">
+          <label class="f">Função</label>
+          <input type="text" id="f-funcao" list="funcao-options" placeholder="Ex: Guerreiro, Caçador, Paladino...">
+          <datalist id="funcao-options">
+            <option value="Guerreiro"><option value="Caçador"><option value="Paladino">
+            <option value="Curandeiro"><option value="Mercador">
+          </datalist>
+        </div>
+        <div class="field">
+          <label class="f">Fonte do Rank</label>
+          <select id="f-rank-fonte">
+            <option value="Documentado">Documentado (oficial)</option>
+            <option value="Estimado">Estimado (por terceiros)</option>
+            <option value="Rumor">Rumor (fragmentado)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="f">Especialização de Combate</label>
+        <div class="spec-row">
+          <span class="spec-lbl">Humanos</span>
+          <input type="range" id="f-spec" min="0" max="10" value="5">
+          <span class="spec-lbl">Criaturas</span>
+          <span class="spec-val" id="spec-val">Equilibrado</span>
+        </div>
+      </div>
+      <div class="section-row">
+        <div class="field"><label class="f">Como chegou ao rank</label><textarea id="f-rank-origem" placeholder="Ex: força bruta, versatilidade, contatos e influência..." style="min-height:56px;"></textarea></div>
+        <div class="field"><label class="f">Alianças &amp; guildas próximas</label><textarea id="f-aliancas" placeholder="Guildas ou organizações com quem transita bem" style="min-height:56px;"></textarea></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="ic">&#9733;</span> Atributos</h2>
+      <div class="attr-layout">
+        <div class="attr-chart" id="attr-chart"></div>
+        <div class="attr-list" id="attrs"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="ic">&#9889;</span> Exência</h2>
+      <div class="exe-grid" id="exe-grid"></div>
+    </div>
+
+    <div class="section">
+      <h2><span class="ic">&#128293;</span> Técnicas</h2>
+      <div class="tec-col" id="tec-list"></div>
+    </div>
+
+    <div class="section">
+      <h2><span class="ic">&#128100;</span> Relações</h2>
+      <div class="rel-group">
+        <label class="f">Familiares</label>
+        <div class="tec-col" id="fam-list"></div>
+      </div>
+      <div class="rel-group">
+        <label class="f">Amigos</label>
+        <div class="tec-col" id="ami-list"></div>
+      </div>
+      <div class="rel-group">
+        <label class="f">Inimigos</label>
+        <div class="tec-col" id="ini-list"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="ic">&#127890;</span> Inventário</h2>
+      <div class="inv-grid" id="inv-grid"></div>
+    </div>
+
+    <div class="section">
+      <h2><span class="ic">&#128214;</span> História</h2>
+      <textarea id="f-historia" style="min-height:140px; overflow:hidden;"></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn danger" id="btn-delete">Excluir ficha</button>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <span class="saved-flash" id="saved-flash">Salvo &#10003;</span>
+        <button class="btn primary" id="btn-save">Salvar ficha</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ATTRS = ["Força","Resistência","Velocidade","Inteligência (QI)","Sabedoria","Carisma"];
+const EXE = [
+  {key:"natural", label:"Natural", cls:"exe-nat"},
+  {key:"individual", label:"Individual", cls:"exe-ind"},
+  {key:"ancestral", label:"Ancestral", cls:"exe-anc"},
+  {key:"divina", label:"Divina", cls:"exe-div"},
+];
+const EXE_STATS = [
+  {key:"armazenamento", label:"Armazenamento"},
+  {key:"fluxo", label:"Fluxo de Liberação"},
+  {key:"regen", label:"Taxa de Regeneração"},
+];
+const INV_SLOTS = 24;
+
+let sheets = [];
+let currentId = null;
+
+function migrateSheet(s){
+  if(s.funcao===undefined) s.funcao='';
+  if(s.rankFonte===undefined) s.rankFonte='Documentado';
+  if(s.spec===undefined) s.spec=5;
+  if(s.rankOrigem===undefined) s.rankOrigem='';
+  if(s.aliancas===undefined) s.aliancas='';
+  ['familiares','amigos','inimigos'].forEach(k=>{
+    if(!Array.isArray(s[k])){
+      s[k] = (typeof s[k]==='string' && s[k].trim()) ? s[k].split('\n').filter(l=>l.trim()) : [''];
+    }
+    if(s[k].length===0) s[k] = [''];
+  });
+  EXE.forEach(cat=>{
+    if(!s.exe) s.exe = {};
+    if(!s.exe[cat.key]) s.exe[cat.key] = {};
+    EXE_STATS.forEach(st=>{
+      const cur = s.exe[cat.key][st.key];
+      if(typeof cur !== 'object' || cur===null){
+        s.exe[cat.key][st.key] = {value: Number(cur)||0, max: Math.max(10, Number(cur)||0)};
+      }
+    });
+  });
+  if(!s.attrs) s.attrs = {};
+  ATTRS.forEach(a=>{ if(typeof s.attrs[a] !== 'number') s.attrs[a] = Number(s.attrs[a])||0; });
+  return s;
+}
+
+function loadAll(){
+  try{
+    const raw = localStorage.getItem('fichas_v1');
+    sheets = raw ? JSON.parse(raw).map(migrateSheet) : [];
+  }catch(e){ sheets = []; }
+}
+function saveAll(){
+  try{ localStorage.setItem('fichas_v1', JSON.stringify(sheets)); }
+  catch(e){ console.error('Falha ao salvar', e); }
+}
+
+function blankSheet(){
+  return {
+    id: 'c'+Date.now()+Math.random().toString(36).slice(2,7),
+    nome:'', rank:'', org:'', photo:'',
+    funcao:'', rankFonte:'Documentado', spec:5,
+    rankOrigem:'', aliancas:'',
+    attrs: Object.fromEntries(ATTRS.map(a=>[a,0])),
+    exe: Object.fromEntries(EXE.map(e=>[e.key, Object.fromEntries(EXE_STATS.map(s=>[s.key,{value:0,max:10}]))])),
+    tecnicas: ['','','','','','',''].slice(0,8),
+    familiares:[''], amigos:[''], inimigos:[''],
+    inventario: Array(INV_SLOTS).fill(''),
+    historia:''
+  };
+}
+
+function renderGallery(){
+  const g = document.getElementById('gallery');
+  g.innerHTML = '';
+  const newCard = document.createElement('div');
+  newCard.className = 'card newcard';
+  newCard.innerHTML = '<div class="plus">+</div><div>Criar ficha</div>';
+  newCard.onclick = () => openEditor(null);
+  g.appendChild(newCard);
+
+  if(sheets.length === 0){
+    // nothing else to show besides new card
+  }
+  sheets.slice().reverse().forEach(s=>{
+    const c = document.createElement('div');
+    c.className = 'card';
+    c.innerHTML = `
+      <div class="rank-tag">${escapeHtml(s.rank||'—')}</div>
+      <div class="photo">${s.photo ? `<img src="${s.photo}">` : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.24-8 5v2h16v-2c0-2.76-3.6-5-8-5Z"/></svg>`}</div>
+      <h3>${escapeHtml(s.nome || 'Sem nome')}</h3>
+      <div class="meta">${escapeHtml(s.org || 'Sem organização')}${s.funcao ? ' · '+escapeHtml(s.funcao) : ''}</div>
+      <button class="del" title="Excluir">&times;</button>
+    `;
+    c.querySelector('.del').onclick = (ev)=>{ ev.stopPropagation(); deleteSheet(s.id); };
+    c.onclick = ()=> openEditor(s.id);
+    g.appendChild(c);
+  });
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str||''; return d.innerHTML;
+}
+
+let working = null;
+
+function niceMax(m){
+  m = Math.max(10, Math.ceil(m*1.15));
+  const step = m<=20?5:(m<=100?10:(m<=500?50:100));
+  return Math.ceil(m/step)*step;
+}
+
+function renderAttrsChart(){
+  const values = ATTRS.map(a=>Number(working.attrs[a])||0);
+  const scale = niceMax(Math.max(...values,0));
+  const n = ATTRS.length, R = 100, C = 140;
+  const pt = (i,r) => {
+    const ang = -Math.PI/2 + i*(2*Math.PI/n);
+    return [C + r*Math.cos(ang), C + r*Math.sin(ang)];
+  };
+  let svg = `<svg viewBox="0 0 280 280">`;
+  [0.33,0.66,1].forEach(f=>{
+    const pts = ATTRS.map((_,i)=>pt(i,R*f).join(',')).join(' ');
+    svg += `<polygon class="ring" points="${pts}"/>`;
+  });
+  ATTRS.forEach((_,i)=>{ const [x,y]=pt(i,R); svg += `<line class="axis" x1="${C}" y1="${C}" x2="${x}" y2="${y}"/>`; });
+  const poly = ATTRS.map((a,i)=>{ const r=(values[i]/scale)*R; return pt(i,r).join(','); }).join(' ');
+  svg += `<polygon class="poly" points="${poly}"/>`;
+  ATTRS.forEach((a,i)=>{
+    const r=(values[i]/scale)*R; const [px,py]=pt(i,r);
+    svg += `<circle class="pt" cx="${px}" cy="${py}" r="3.5"/>`;
+    const [lx,ly]=pt(i,R+26);
+    const short = a.split(' ')[0].replace('(QI)','QI');
+    svg += `<text class="axlabel" x="${lx}" y="${ly-4}" text-anchor="middle">${short}</text>`;
+    svg += `<text class="axval" x="${lx}" y="${ly+9}" text-anchor="middle">${values[i]}</text>`;
+  });
+  svg += `</svg>`;
+  document.getElementById('attr-chart').innerHTML = svg;
+}
+
+function renderAttrs(){
+  const wrap = document.getElementById('attrs');
+  wrap.innerHTML = '';
+  ATTRS.forEach(a=>{
+    const row = document.createElement('div'); row.className='attr-row';
+    const name = document.createElement('div'); name.className='aname'; name.textContent=a;
+    const input = document.createElement('input'); input.type='number'; input.min='0';
+    input.value = working.attrs[a];
+    input.oninput = ()=>{ working.attrs[a] = Number(input.value)||0; renderAttrsChart(); };
+    row.appendChild(name); row.appendChild(input);
+    wrap.appendChild(row);
+  });
+  renderAttrsChart();
+}
+
+function renderExe(){
+  const grid = document.getElementById('exe-grid');
+  grid.innerHTML = '';
+  EXE.forEach(cat=>{
+    const card = document.createElement('div'); card.className='exe-card '+cat.cls;
+    const h = document.createElement('h4'); h.textContent = cat.label; card.appendChild(h);
+    EXE_STATS.forEach(st=>{
+      const cur = working.exe[cat.key][st.key];
+      const statDiv = document.createElement('div'); statDiv.className='stat';
+      const lbl = document.createElement('div'); lbl.className='lbl'; lbl.textContent=st.label;
+      const inputsRow = document.createElement('div'); inputsRow.className='inputs';
+      const fmt = (n)=> Number(n||0).toLocaleString('pt-BR');
+      const vInput = document.createElement('input'); vInput.type='text'; vInput.inputMode='numeric'; vInput.value=fmt(cur.value);
+      const slash = document.createElement('span'); slash.className='slash'; slash.textContent='/';
+      const mInput = document.createElement('input'); mInput.type='text'; mInput.inputMode='numeric'; mInput.value=fmt(cur.max);
+      const gbar = document.createElement('div'); gbar.className='gbar';
+      const fill = document.createElement('div'); fill.className='fill'; gbar.appendChild(fill);
+      const updateFill = ()=>{
+        const pct = cur.max>0 ? Math.min(100,(cur.value/cur.max)*100) : 0;
+        fill.style.width = pct+'%';
+      };
+      vInput.oninput = ()=>{ cur.value = parseInt(vInput.value.replace(/\D/g,''))||0; updateFill(); };
+      vInput.onfocus = ()=>{ vInput.value = String(cur.value); vInput.select(); };
+      vInput.onblur = ()=>{ vInput.value = fmt(cur.value); };
+      mInput.oninput = ()=>{ cur.max = parseInt(mInput.value.replace(/\D/g,''))||0; updateFill(); };
+      mInput.onfocus = ()=>{ mInput.value = String(cur.max); mInput.select(); };
+      mInput.onblur = ()=>{ mInput.value = fmt(cur.max); };
+      inputsRow.appendChild(vInput); inputsRow.appendChild(slash); inputsRow.appendChild(mInput);
+      statDiv.appendChild(lbl); statDiv.appendChild(inputsRow); statDiv.appendChild(gbar);
+      card.appendChild(statDiv);
+      updateFill();
+    });
+    grid.appendChild(card);
+  });
+}
+
+function autoGrow(el){
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function renderTextList(containerId, arr, placeholder, addLabel, onRerender){
+  const col = document.getElementById(containerId);
+  col.innerHTML = '';
+  arr.forEach((t,i)=>{
+    const row = document.createElement('div'); row.className='tec-item';
+    row.innerHTML = `<span class="dia">&#9671;</span>`;
+    const ta = document.createElement('textarea'); ta.value=t; ta.rows=1;
+    ta.placeholder=placeholder;
+    ta.oninput = ()=>{ arr[i] = ta.value; autoGrow(ta); };
+    const rm = document.createElement('button'); rm.className='rm'; rm.textContent='×';
+    rm.onclick = ()=>{ arr.splice(i,1); if(arr.length===0) arr.push(''); onRerender(); };
+    row.appendChild(ta); row.appendChild(rm);
+    col.appendChild(row);
+    autoGrow(ta);
+  });
+  const add = document.createElement('button'); add.className='addline'; add.textContent=addLabel;
+  add.onclick = ()=>{ arr.push(''); onRerender(); };
+  col.appendChild(add);
+}
+
+function renderTecnicas(){
+  renderTextList('tec-list', working.tecnicas, 'Nome e descrição da técnica', '+ adicionar técnica', renderTecnicas);
+}
+function renderFamiliares(){
+  renderTextList('fam-list', working.familiares, 'Nome e relação (ex: irmã mais velha, mentor...)', '+ adicionar familiar', renderFamiliares);
+}
+function renderAmigos(){
+  renderTextList('ami-list', working.amigos, 'Nome e como se conheceram', '+ adicionar amigo', renderAmigos);
+}
+function renderInimigos(){
+  renderTextList('ini-list', working.inimigos, 'Nome e motivo do conflito', '+ adicionar inimigo', renderInimigos);
+}
+
+function renderInventario(){
+  const grid = document.getElementById('inv-grid');
+  grid.innerHTML = '';
+  working.inventario.forEach((item,i)=>{
+    const slot = document.createElement('div');
+    slot.className = 'inv-slot'+(item?' filled':'');
+    slot.textContent = item;
+    slot.title = item ? 'Clique para editar' : 'Clique para adicionar item';
+    slot.onclick = ()=>{
+      const v = prompt('Item:', item||'');
+      if(v!==null){ working.inventario[i] = v.trim(); renderInventario(); }
+    };
+    grid.appendChild(slot);
+  });
+}
+
+function openEditor(id){
+  working = id ? JSON.parse(JSON.stringify(sheets.find(s=>s.id===id))) : blankSheet();
+  currentId = working.id;
+  const isNew = !id;
+  document.getElementById('edit-title').textContent = isNew ? 'Nova ficha' : 'Editando ficha';
+
+  document.getElementById('f-nome').value = working.nome;
+  document.getElementById('f-rank').value = working.rank;
+  document.getElementById('f-org').value = working.org;
+  document.getElementById('f-historia').value = working.historia;
+  autoGrow(document.getElementById('f-historia'));
+
+  document.getElementById('f-funcao').value = working.funcao;
+  document.getElementById('f-rank-fonte').value = working.rankFonte;
+  document.getElementById('f-rank-origem').value = working.rankOrigem;
+  document.getElementById('f-aliancas').value = working.aliancas;
+  const specInput = document.getElementById('f-spec');
+  specInput.value = working.spec;
+  updateSpecLabel();
+
+  const pb = document.getElementById('photo-box');
+  pb.querySelector('img')?.remove();
+  if(working.photo){
+    const img = document.createElement('img'); img.src = working.photo;
+    pb.insertBefore(img, pb.firstChild);
+  }
+
+  renderAttrs(); renderExe(); renderTecnicas(); renderFamiliares(); renderAmigos(); renderInimigos(); renderInventario();
+
+  document.getElementById('btn-delete').classList.toggle('hidden', isNew);
+
+  document.getElementById('view-gallery').classList.add('hidden');
+  document.getElementById('view-editor').classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+function collectWorkingFromForm(){
+  working.nome = document.getElementById('f-nome').value;
+  working.rank = document.getElementById('f-rank').value;
+  working.org = document.getElementById('f-org').value;
+  working.historia = document.getElementById('f-historia').value;
+  working.funcao = document.getElementById('f-funcao').value;
+  working.rankFonte = document.getElementById('f-rank-fonte').value;
+  working.rankOrigem = document.getElementById('f-rank-origem').value;
+  working.aliancas = document.getElementById('f-aliancas').value;
+  working.spec = Number(document.getElementById('f-spec').value);
+}
+
+const SPEC_LABELS = ['Só humanos','Quase só humanos','Foco em humanos','Leve foco humanos','Leve foco humanos','Equilibrado','Leve foco criaturas','Leve foco criaturas','Foco em criaturas','Quase só criaturas','Só criaturas'];
+function updateSpecLabel(){
+  const v = Number(document.getElementById('f-spec').value);
+  document.getElementById('spec-val').textContent = SPEC_LABELS[v] ?? 'Equilibrado';
+}
+document.getElementById('f-spec').oninput = updateSpecLabel;
+document.getElementById('f-historia').oninput = (e)=> autoGrow(e.target);
+
+function saveCurrent(){
+  collectWorkingFromForm();
+  const idx = sheets.findIndex(s=>s.id===working.id);
+  if(idx>=0) sheets[idx] = working; else sheets.push(working);
+  saveAll();
+  const flash = document.getElementById('saved-flash');
+  flash.classList.add('show');
+  setTimeout(()=>flash.classList.remove('show'), 1400);
+}
+
+function deleteSheet(id){
+  if(!confirm('Excluir esta ficha? Essa ação não pode ser desfeita.')) return;
+  sheets = sheets.filter(s=>s.id!==id);
+  saveAll();
+  if(currentId===id) backToGallery();
+  else renderGallery();
+}
+
+function backToGallery(){
+  document.getElementById('view-editor').classList.add('hidden');
+  document.getElementById('view-gallery').classList.remove('hidden');
+  renderGallery();
+}
+
+document.getElementById('btn-new').onclick = ()=> openEditor(null);
+document.getElementById('btn-back').onclick = ()=>{
+  collectWorkingFromForm();
+  backToGallery();
+};
+document.getElementById('btn-save').onclick = saveCurrent;
+document.getElementById('btn-delete').onclick = ()=> deleteSheet(currentId);
+document.getElementById('photo-box').onclick = ()=> document.getElementById('photo-input').click();
+document.getElementById('photo-input').onchange = (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    working.photo = reader.result;
+    const pb = document.getElementById('photo-box');
+    pb.querySelector('img')?.remove();
+    const img = document.createElement('img'); img.src = working.photo;
+    pb.insertBefore(img, pb.firstChild);
+  };
+  reader.readAsDataURL(file);
+};
+
+loadAll();
+renderGallery();
+</script>
+</body>
+</html>
