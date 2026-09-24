@@ -146,6 +146,7 @@ select option{ background:var(--panel2); color:var(--parch); }
   color:var(--parch); font-size:.88rem; padding:4px 3px; text-align:center; letter-spacing:.02em;
 }
 .exe-card .stat input[type=text]:focus{ outline:none; border-bottom-color:var(--gold); background:#182036; }
+.exe-card .stat input.regen-input{ width:100%; text-align:left; font-size:.8rem; }
 .exe-card .stat .slash{ color:var(--ink-dim); font-size:.8rem; }
 .exe-card .gbar{ height:8px; background:#1c2333; border:1px solid #2b3450; border-radius:1px; overflow:hidden; }
 .exe-card .gbar .fill{ height:100%; width:0%; }
@@ -324,9 +325,9 @@ const EXE = [
   {key:"divina", label:"Divina", cls:"exe-div"},
 ];
 const EXE_STATS = [
-  {key:"armazenamento", label:"Armazenamento"},
-  {key:"fluxo", label:"Fluxo de Liberação"},
-  {key:"regen", label:"Taxa de Regeneração"},
+  {key:"armazenamento", label:"Armazenamento", type:"pair"},
+  {key:"fluxo", label:"Fluxo de Liberação", type:"pair"},
+  {key:"regen", label:"Taxa de Regeneração", type:"text"},
 ];
 const INV_SLOTS = 24;
 
@@ -350,8 +351,14 @@ function migrateSheet(s){
     if(!s.exe[cat.key]) s.exe[cat.key] = {};
     EXE_STATS.forEach(st=>{
       const cur = s.exe[cat.key][st.key];
-      if(typeof cur !== 'object' || cur===null){
-        s.exe[cat.key][st.key] = {value: Number(cur)||0, max: Math.max(10, Number(cur)||0)};
+      if(st.type==='text'){
+        if(typeof cur !== 'string'){
+          s.exe[cat.key][st.key] = (cur && typeof cur==='object') ? `${cur.value||0} a cada 1 min` : (cur!==undefined ? String(cur) : '');
+        }
+      }else{
+        if(typeof cur !== 'object' || cur===null){
+          s.exe[cat.key][st.key] = {value: Number(cur)||0, max: Math.max(10, Number(cur)||0)};
+        }
       }
     });
   });
@@ -378,7 +385,7 @@ function blankSheet(){
     funcao:'', rankFonte:'Documentado', spec:5,
     rankOrigem:'', aliancas:'',
     attrs: Object.fromEntries(ATTRS.map(a=>[a,0])),
-    exe: Object.fromEntries(EXE.map(e=>[e.key, Object.fromEntries(EXE_STATS.map(s=>[s.key,{value:0,max:10}]))])),
+    exe: Object.fromEntries(EXE.map(e=>[e.key, Object.fromEntries(EXE_STATS.map(s=>[s.key, s.type==='text' ? '' : {value:0,max:10}]))])),
     tecnicas: ['','','','','','',''].slice(0,8),
     familiares:[''], amigos:[''], inimigos:[''],
     inventario: Array(INV_SLOTS).fill(''),
@@ -479,6 +486,19 @@ function renderExe(){
       const cur = working.exe[cat.key][st.key];
       const statDiv = document.createElement('div'); statDiv.className='stat';
       const lbl = document.createElement('div'); lbl.className='lbl'; lbl.textContent=st.label;
+      statDiv.appendChild(lbl);
+
+      if(st.type==='text'){
+        const rInput = document.createElement('input'); rInput.type='text';
+        rInput.className='regen-input';
+        rInput.placeholder='Ex: 5 a cada 1 min';
+        rInput.value = cur || '';
+        rInput.oninput = ()=>{ working.exe[cat.key][st.key] = rInput.value; };
+        statDiv.appendChild(rInput);
+        card.appendChild(statDiv);
+        return;
+      }
+
       const inputsRow = document.createElement('div'); inputsRow.className='inputs';
       const fmt = (n)=> Number(n||0).toLocaleString('pt-BR');
       const vInput = document.createElement('input'); vInput.type='text'; vInput.inputMode='numeric'; vInput.value=fmt(cur.value);
@@ -497,7 +517,7 @@ function renderExe(){
       mInput.onfocus = ()=>{ mInput.value = String(cur.max); mInput.select(); };
       mInput.onblur = ()=>{ mInput.value = fmt(cur.max); };
       inputsRow.appendChild(vInput); inputsRow.appendChild(slash); inputsRow.appendChild(mInput);
-      statDiv.appendChild(lbl); statDiv.appendChild(inputsRow); statDiv.appendChild(gbar);
+      statDiv.appendChild(inputsRow); statDiv.appendChild(gbar);
       card.appendChild(statDiv);
       updateFill();
     });
