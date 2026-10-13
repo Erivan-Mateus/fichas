@@ -180,6 +180,21 @@ select option{ background:var(--panel2); color:var(--parch); }
 .laco-body{ display:flex; gap:24px; flex-wrap:wrap; align-items:center; margin-top:4px; }
 .laco-chart{ width:230px; }
 .laco-controls{ flex:1; min-width:220px; }
+.chart-legend{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; font-size:.72rem; color:var(--ink-dim); font-family:'Cinzel',serif; margin-top:4px; }
+.chart-legend i{ display:inline-block; width:10px; height:10px; margin-right:5px; border-radius:2px; vertical-align:-1px; }
+.evo-box{ margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); }
+.evo-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
+.evo-title{ font-family:'Cinzel',serif; font-size:.8rem; color:#6bb8ff; letter-spacing:.04em; }
+.addline.evo-add{ color:#6bb8ff; margin-top:0; }
+.addline.evo-add:hover{ color:#a6d6ff; }
+.evo-item{ border-left:2px solid #6bb8ff; background:#0b1322; padding:10px 12px 8px; margin-bottom:10px; border-radius:0 3px 3px 0; }
+.evo-top{ display:flex; gap:10px; align-items:flex-end; }
+.evo-top .field{ flex:1; margin-bottom:8px; }
+.evo-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:6px; }
+@media(max-width:560px){ .evo-grid{ grid-template-columns:repeat(2,1fr); } }
+.evo-cell input[type=number]{ width:100%; background:var(--panel2); border:none; border-bottom:1px solid var(--line); color:var(--parch); font-family:'Cinzel',serif; font-size:.9rem; padding:5px 6px; text-align:center; }
+.evo-cell input[type=number]:focus{ outline:none; border-bottom-color:#6bb8ff; }
+.evo-delta{ font-size:.82rem; color:#6bb8ff; font-style:italic; margin:2px 0 8px; }
 
 /* tecnicas */
 .tec-col{ display:flex; flex-direction:column; gap:8px; }
@@ -310,7 +325,7 @@ select option{ background:var(--panel2); color:var(--parch); }
     <!-- Sistema de poder do plano Wakoron -->
     <div class="section hidden" id="sec-lacos">
       <h2><span class="ic">&#10053;</span> Laços de Alma</h2>
-      <div class="hint">Cada poder recebe até 20 pontos, distribuídos entre as quatro classes.</div>
+      <div class="hint">Cada poder recebe até 100 pontos, distribuídos entre as quatro classes.</div>
       <div id="lacos-list"></div>
       <button class="addline" id="btn-add-laco">+ adicionar poder</button>
     </div>
@@ -383,7 +398,7 @@ const PLANOS = {
 const PLANO_PADRAO = 'pasalis';
 
 /* ---------- Laços de Alma ---------- */
-const LACO_MAX = 20;
+const LACO_MAX = 100;
 const LACO_CLASSES = [
   {key:'invocacao', label:'Invocação', color:'#4a7fb5'},
   {key:'projecao',  label:'Projeção',  color:'#b58a3c'},
@@ -391,7 +406,23 @@ const LACO_CLASSES = [
   {key:'protecao',  label:'Proteção',  color:'#4f8a5c'},
 ];
 function blankLaco(){
-  return { nome:'', desc:'', pts: Object.fromEntries(LACO_CLASSES.map(c=>[c.key,0])) };
+  return { nome:'', desc:'', pts: Object.fromEntries(LACO_CLASSES.map(c=>[c.key,0])), evolucoes: [] };
+}
+function normPts(p){
+  const out = {};
+  LACO_CLASSES.forEach(c=>{ out[c.key] = Math.max(0, Math.min(LACO_MAX, Number((p||{})[c.key])||0)); });
+  return out;
+}
+function sumPts(p){
+  return LACO_CLASSES.reduce((a,c)=>a + (p[c.key]||0), 0);
+}
+function deltaText(prev, cur){
+  const parts = LACO_CLASSES
+    .map(c=>({c, d:(cur[c.key]||0)-(prev[c.key]||0)}))
+    .filter(x=>x.d!==0)
+    .sort((a,b)=>Math.abs(b.d)-Math.abs(a.d))
+    .map(x=>`${x.c.label} ${x.d>0?'+':'−'}${Math.abs(x.d)}`);
+  return parts.length ? parts.join(' · ') : 'Sem mudança em relação à etapa anterior';
 }
 
 let sheets = [];
@@ -408,9 +439,12 @@ function migrateSheet(s){
   s.lacos.forEach(l=>{
     l.nome = l.nome || '';
     l.desc = l.desc || '';
-    if(!l.pts || typeof l.pts!=='object') l.pts = {};
-    LACO_CLASSES.forEach(c=>{
-      l.pts[c.key] = Math.max(0, Math.min(LACO_MAX, Number(l.pts[c.key])||0));
+    l.pts = normPts(l.pts);
+    if(!Array.isArray(l.evolucoes)) l.evolucoes = [];
+    l.evolucoes.forEach(e=>{
+      e.etapa = e.etapa || '';
+      e.nota = e.nota || '';
+      e.pts = normPts(e.pts);
     });
   });
   ['familiares','amigos','inimigos'].forEach(k=>{
@@ -604,29 +638,54 @@ function lacoSum(l){
   return LACO_CLASSES.reduce((a,c)=>a + (l.pts[c.key]||0), 0);
 }
 
+const EVO_BLUE = '#6bb8ff';
+
+function lacoScale(l){
+  const vals = LACO_CLASSES.map(c=>l.pts[c.key]||0);
+  (l.evolucoes||[]).forEach(e=>LACO_CLASSES.forEach(c=>vals.push(e.pts[c.key]||0)));
+  return Math.min(LACO_MAX, Math.max(20, niceMax(Math.max(...vals,0))));
+}
+
 function lacoChartSvg(l){
+  const evos = l.evolucoes || [];
+  const scale = lacoScale(l);
   const n = LACO_CLASSES.length, R = 100, C = 140;
   const pt = (i,r) => {
     const ang = -Math.PI/2 + i*(2*Math.PI/n);
     return [C + r*Math.cos(ang), C + r*Math.sin(ang)];
   };
+  const polyPts = (pts)=> LACO_CLASSES.map((c,i)=>pt(i,((pts[c.key]||0)/scale)*R).join(',')).join(' ');
   let svg = `<svg viewBox="0 0 280 280">`;
   [0.25,0.5,0.75,1].forEach(f=>{
     const pts = LACO_CLASSES.map((_,i)=>pt(i,R*f).join(',')).join(' ');
     svg += `<polygon class="ring" points="${pts}"/>`;
   });
   LACO_CLASSES.forEach((_,i)=>{ const [x,y]=pt(i,R); svg += `<line class="axis" x1="${C}" y1="${C}" x2="${x}" y2="${y}"/>`; });
-  const poly = LACO_CLASSES.map((c,i)=>pt(i,((l.pts[c.key]||0)/LACO_MAX)*R).join(',')).join(' ');
-  svg += `<polygon class="poly" points="${poly}"/>`;
+  svg += `<polygon class="poly" points="${polyPts(l.pts)}"/>`;
+  evos.forEach((e,k)=>{
+    const last = k===evos.length-1;
+    svg += `<polygon points="${polyPts(e.pts)}" fill="${last?'rgba(107,184,255,.20)':'none'}" stroke="${EVO_BLUE}" stroke-width="${last?2:1.2}" stroke-opacity="${last?1:.45}"${last?'':' stroke-dasharray="4 3"'}/>`;
+  });
+  const lastEvo = evos.length ? evos[evos.length-1] : null;
   LACO_CLASSES.forEach((c,i)=>{
     const v = l.pts[c.key]||0;
-    const [px,py] = pt(i,(v/LACO_MAX)*R);
+    const [px,py] = pt(i,(v/scale)*R);
     svg += `<circle cx="${px}" cy="${py}" r="3.5" fill="${c.color}"/>`;
+    let valTxt = `${v}`;
+    if(lastEvo){
+      const ev = lastEvo.pts[c.key]||0;
+      const [ex,ey] = pt(i,(ev/scale)*R);
+      svg += `<circle cx="${ex}" cy="${ey}" r="3.5" fill="${EVO_BLUE}"/>`;
+      valTxt += ` → <tspan style="fill:${EVO_BLUE}">${ev}</tspan>`;
+    }
     const [lx,ly] = pt(i,R+26);
     svg += `<text class="axlabel" x="${lx}" y="${ly-4}" text-anchor="middle" style="fill:${c.color}">${c.label}</text>`;
-    svg += `<text class="axval" x="${lx}" y="${ly+9}" text-anchor="middle">${v}</text>`;
+    svg += `<text class="axval" x="${lx}" y="${ly+9}" text-anchor="middle">${valTxt}</text>`;
   });
   svg += `</svg>`;
+  svg += `<div class="chart-legend"><span><i style="background:var(--gold)"></i>Inicial</span>`
+       + (evos.length ? `<span><i style="background:${EVO_BLUE}"></i>Evolução (${evos.length})</span>` : '')
+       + `<span>escala 0–${scale}</span></div>`;
   return svg;
 }
 
@@ -672,6 +731,7 @@ function renderLacos(){
     const chart = document.createElement('div'); chart.className = 'attr-chart laco-chart';
     const controls = document.createElement('div'); controls.className = 'laco-controls';
     const tags = document.createElement('div'); tags.className = 'laco-tags';
+    let updateEvoInfo = ()=>{};
     const refresh = ()=>{
       const sum = lacoSum(l);
       total.innerHTML = `<span>${sum}</span> / ${LACO_MAX}`;
@@ -681,6 +741,7 @@ function renderLacos(){
         .map(c=>c.label);
       tags.textContent = used.length ? used.join(' + ') : 'Nenhuma classe definida';
       chart.innerHTML = lacoChartSvg(l);
+      updateEvoInfo();
     };
 
     LACO_CLASSES.forEach(c=>{
@@ -706,6 +767,96 @@ function renderLacos(){
     controls.appendChild(tags);
     body.appendChild(chart); body.appendChild(controls);
     card.appendChild(body);
+
+    // evolução do poder
+    const evo = document.createElement('div'); evo.className = 'evo-box';
+    const evoHead = document.createElement('div'); evoHead.className = 'evo-head';
+    const evoTitle = document.createElement('div'); evoTitle.className = 'evo-title'; evoTitle.textContent = 'Evolução do poder';
+    const evoAdd = document.createElement('button'); evoAdd.className = 'addline evo-add'; evoAdd.textContent = '+ registrar evolução';
+    evoHead.appendChild(evoTitle); evoHead.appendChild(evoAdd);
+    const evoHint = document.createElement('div'); evoHint.className = 'hint'; evoHint.style.margin = '0 0 10px';
+    evoHint.textContent = 'Cada registro é uma nova distribuição dos pontos (também até ' + LACO_MAX + '). O gráfico azul mostra as mudanças sobre o poder inicial.';
+    const evoList = document.createElement('div');
+    const evoInfo = [];
+
+    updateEvoInfo = ()=>{
+      evoInfo.forEach((inf,k)=>{
+        const ev = l.evolucoes[k];
+        if(!ev) return;
+        const prev = k===0 ? l.pts : l.evolucoes[k-1].pts;
+        const sum = sumPts(ev.pts);
+        inf.total.innerHTML = `<span>${sum}</span> / ${LACO_MAX}`;
+        inf.total.classList.toggle('full', sum===LACO_MAX);
+        inf.delta.textContent = deltaText(prev, ev.pts);
+      });
+    };
+
+    const renderEvos = ()=>{
+      evoList.innerHTML = '';
+      evoInfo.length = 0;
+      l.evolucoes.forEach((ev,k)=>{
+        const item = document.createElement('div'); item.className = 'evo-item';
+
+        const top = document.createElement('div'); top.className = 'evo-top';
+        const fE = document.createElement('div'); fE.className = 'field';
+        fE.innerHTML = '<label class="f">Etapa ' + (k+1) + '</label>';
+        const etapaIn = document.createElement('input'); etapaIn.type = 'text';
+        etapaIn.placeholder = 'Ex: Depois de curar o primeiro aliado';
+        etapaIn.value = ev.etapa;
+        etapaIn.oninput = ()=>{ ev.etapa = etapaIn.value; };
+        fE.appendChild(etapaIn);
+        const tot = document.createElement('div'); tot.className = 'laco-total'; tot.style.marginBottom = '10px';
+        const rmE = document.createElement('button'); rmE.className = 'laco-rm'; rmE.textContent = '×';
+        rmE.title = 'Remover registro';
+        rmE.style.marginBottom = '6px';
+        rmE.onclick = ()=>{ l.evolucoes.splice(k,1); renderEvos(); refresh(); };
+        top.appendChild(fE); top.appendChild(tot); top.appendChild(rmE);
+        item.appendChild(top);
+
+        const grid = document.createElement('div'); grid.className = 'evo-grid';
+        LACO_CLASSES.forEach(c=>{
+          const cell = document.createElement('div'); cell.className = 'evo-cell';
+          const lab = document.createElement('label'); lab.className = 'f'; lab.textContent = c.label; lab.style.color = c.color;
+          const inp = document.createElement('input'); inp.type = 'number'; inp.min = 0; inp.max = LACO_MAX;
+          inp.value = ev.pts[c.key];
+          inp.oninput = ()=>{
+            const others = LACO_CLASSES.reduce((a,kk)=> kk.key===c.key ? a : a + ev.pts[kk.key], 0);
+            let v = Math.max(0, Math.floor(Number(inp.value)||0));
+            const cap = LACO_MAX - others;
+            if(v > cap){ v = cap; inp.value = v; }
+            ev.pts[c.key] = v;
+            refresh();
+          };
+          cell.appendChild(lab); cell.appendChild(inp);
+          grid.appendChild(cell);
+        });
+        item.appendChild(grid);
+
+        const delta = document.createElement('div'); delta.className = 'evo-delta';
+        item.appendChild(delta);
+
+        const nota = document.createElement('textarea');
+        nota.style.minHeight = '44px';
+        nota.placeholder = 'O que mudou e por quê (ex: o desejo de curar o namorado puxou o poder para Proteção)';
+        nota.value = ev.nota;
+        nota.oninput = ()=>{ ev.nota = nota.value; };
+        item.appendChild(nota);
+
+        evoInfo.push({total: tot, delta});
+        evoList.appendChild(item);
+      });
+      updateEvoInfo();
+    };
+
+    evoAdd.onclick = ()=>{
+      const base = l.evolucoes.length ? l.evolucoes[l.evolucoes.length-1].pts : l.pts;
+      l.evolucoes.push({ etapa:'', nota:'', pts: Object.assign({}, base) });
+      renderEvos(); refresh();
+    };
+
+    evo.appendChild(evoHead); evo.appendChild(evoHint); evo.appendChild(evoList);
+    card.appendChild(evo);
+    renderEvos();
     refresh();
     col.appendChild(card);
   });
