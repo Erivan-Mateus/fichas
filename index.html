@@ -62,6 +62,7 @@ h1,h2,h3,.label{ font-family:'Cinzel', serif; letter-spacing:.03em; color:var(--
 .card .photo svg{ width:44%; opacity:.35; }
 .card h3{ margin:0 0 3px; font-size:1rem; color:var(--parch); }
 .card .meta{ font-size:.78rem; color:var(--ink-dim); font-style:italic; }
+.card .plano-tag{ font-size:.68rem; color:var(--gold-dim); font-family:'Cinzel',serif; letter-spacing:.05em; margin-top:4px; }
 .card .rank-tag{
   position:absolute; top:10px; right:10px; background:#000a; border:1px solid var(--gold-dim);
   color:var(--gold); font-family:'Cinzel',serif; font-size:.65rem; padding:2px 7px; border-radius:2px;
@@ -82,6 +83,7 @@ h1,h2,h3,.label{ font-family:'Cinzel', serif; letter-spacing:.03em; color:var(--
 }
 .section h2{ font-size:1.05rem; margin:0 0 14px; display:flex; align-items:center; gap:9px; font-weight:600; }
 .section h2 .ic{ font-size:1.1rem; }
+.section .hint{ margin:-6px 0 14px; color:var(--ink-dim); font-size:.85rem; font-style:italic; }
 .section-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 @media(max-width:760px){ .section-row{ grid-template-columns:1fr; } }
 
@@ -155,6 +157,30 @@ select option{ background:var(--panel2); color:var(--parch); }
 .exe-anc{ border-color:var(--anc); } .exe-anc h4{ color:var(--anc); } .exe-anc .fill{ background:var(--anc); }
 .exe-div{ border-color:var(--div); } .exe-div h4{ color:var(--div); } .exe-div .fill{ background:var(--div); }
 
+/* laços de alma */
+.laco-card{
+  border:1px solid var(--gold-dim); border-radius:3px; background:#0d1220;
+  padding:14px 16px 10px; margin-bottom:12px;
+}
+.laco-head{ display:flex; gap:12px; align-items:flex-end; }
+.laco-head .field{ flex:1; margin-bottom:10px; }
+.laco-total{
+  flex:none; font-family:'Cinzel',serif; font-size:.82rem; color:var(--ink-dim);
+  margin-bottom:14px; white-space:nowrap;
+}
+.laco-total span{ color:var(--gold); font-size:1.05rem; }
+.laco-total.full span{ color:var(--nat); }
+.laco-rm{ background:none; border:none; color:var(--ink-dim); cursor:pointer; font-size:1.2rem; margin-bottom:10px; flex:none; }
+.laco-rm:hover{ color:#c97d7d; }
+.cls-row{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.cls-name{ width:96px; flex:none; font-family:'Cinzel',serif; font-size:.76rem; letter-spacing:.02em; color:var(--c); }
+.cls-row input[type=range]{ flex:1; accent-color:var(--c); background:transparent; }
+.cls-pts{ width:26px; text-align:right; flex:none; font-family:'Cinzel',serif; font-size:.9rem; color:var(--parch); }
+.laco-tags{ margin:8px 0 4px; font-size:.82rem; color:var(--gold); font-style:italic; }
+.laco-body{ display:flex; gap:24px; flex-wrap:wrap; align-items:center; margin-top:4px; }
+.laco-chart{ width:230px; }
+.laco-controls{ flex:1; min-width:220px; }
+
 /* tecnicas */
 .tec-col{ display:flex; flex-direction:column; gap:8px; }
 .rel-group{ margin-bottom:18px; }
@@ -221,7 +247,13 @@ select option{ background:var(--panel2); color:var(--parch); }
             <div class="field"><label class="f">Nome</label><input type="text" id="f-nome"></div>
             <div class="field"><label class="f">Rank</label><input type="text" id="f-rank" placeholder="Ex: Dragão Ancião 52"></div>
           </div>
-          <div class="field"><label class="f">Organização</label><input type="text" id="f-org"></div>
+          <div class="section-row">
+            <div class="field"><label class="f">Organização</label><input type="text" id="f-org"></div>
+            <div class="field">
+              <label class="f">Plano base</label>
+              <select id="f-plano"></select>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -269,9 +301,18 @@ select option{ background:var(--panel2); color:var(--parch); }
       </div>
     </div>
 
-    <div class="section">
+    <!-- Sistema de poder do plano Pasalis -->
+    <div class="section" id="sec-exe">
       <h2><span class="ic">&#9889;</span> Exência</h2>
       <div class="exe-grid" id="exe-grid"></div>
+    </div>
+
+    <!-- Sistema de poder do plano Wakoron -->
+    <div class="section hidden" id="sec-lacos">
+      <h2><span class="ic">&#10053;</span> Laços de Alma</h2>
+      <div class="hint">Cada poder recebe até 20 pontos, distribuídos entre as quatro classes.</div>
+      <div id="lacos-list"></div>
+      <button class="addline" id="btn-add-laco">+ adicionar poder</button>
     </div>
 
     <div class="section">
@@ -331,6 +372,28 @@ const EXE_STATS = [
 ];
 const INV_SLOTS = 24;
 
+/* ---------- Planos base ----------
+   Cada plano define qual sistema de poder aparece na ficha.
+   Para adicionar um plano novo, basta incluir uma linha aqui.
+   sistema: 'exencia' (Exência) ou 'lacos' (Laços de Alma) */
+const PLANOS = {
+  pasalis: { label:'Pasalis', sistema:'exencia', desc:'Exência' },
+  wakoron: { label:'Wakoron', sistema:'lacos',   desc:'Laços de Alma' },
+};
+const PLANO_PADRAO = 'pasalis';
+
+/* ---------- Laços de Alma ---------- */
+const LACO_MAX = 20;
+const LACO_CLASSES = [
+  {key:'invocacao', label:'Invocação', color:'#4a7fb5'},
+  {key:'projecao',  label:'Projeção',  color:'#b58a3c'},
+  {key:'ampliacao', label:'Ampliação', color:'#b5524a'},
+  {key:'protecao',  label:'Proteção',  color:'#4f8a5c'},
+];
+function blankLaco(){
+  return { nome:'', desc:'', pts: Object.fromEntries(LACO_CLASSES.map(c=>[c.key,0])) };
+}
+
 let sheets = [];
 let currentId = null;
 
@@ -340,6 +403,16 @@ function migrateSheet(s){
   if(s.spec===undefined) s.spec=5;
   if(s.rankOrigem===undefined) s.rankOrigem='';
   if(s.aliancas===undefined) s.aliancas='';
+  if(!PLANOS[s.plano]) s.plano = PLANO_PADRAO;
+  if(!Array.isArray(s.lacos) || s.lacos.length===0) s.lacos = [blankLaco()];
+  s.lacos.forEach(l=>{
+    l.nome = l.nome || '';
+    l.desc = l.desc || '';
+    if(!l.pts || typeof l.pts!=='object') l.pts = {};
+    LACO_CLASSES.forEach(c=>{
+      l.pts[c.key] = Math.max(0, Math.min(LACO_MAX, Number(l.pts[c.key])||0));
+    });
+  });
   ['familiares','amigos','inimigos'].forEach(k=>{
     if(!Array.isArray(s[k])){
       s[k] = (typeof s[k]==='string' && s[k].trim()) ? s[k].split('\n').filter(l=>l.trim()) : [''];
@@ -382,10 +455,12 @@ function blankSheet(){
   return {
     id: 'c'+Date.now()+Math.random().toString(36).slice(2,7),
     nome:'', rank:'', org:'', photo:'',
+    plano: PLANO_PADRAO,
     funcao:'', rankFonte:'Documentado', spec:5,
     rankOrigem:'', aliancas:'',
     attrs: Object.fromEntries(ATTRS.map(a=>[a,0])),
     exe: Object.fromEntries(EXE.map(e=>[e.key, Object.fromEntries(EXE_STATS.map(s=>[s.key, s.type==='text' ? '' : {value:0,max:10}]))])),
+    lacos: [blankLaco()],
     tecnicas: ['','','','','','',''].slice(0,8),
     familiares:[''], amigos:[''], inimigos:[''],
     inventario: Array(INV_SLOTS).fill(''),
@@ -402,17 +477,16 @@ function renderGallery(){
   newCard.onclick = () => openEditor(null);
   g.appendChild(newCard);
 
-  if(sheets.length === 0){
-    // nothing else to show besides new card
-  }
   sheets.slice().reverse().forEach(s=>{
     const c = document.createElement('div');
     c.className = 'card';
+    const planoLabel = PLANOS[s.plano] ? PLANOS[s.plano].label : '';
     c.innerHTML = `
       <div class="rank-tag">${escapeHtml(s.rank||'—')}</div>
       <div class="photo">${s.photo ? `<img src="${s.photo}">` : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.24-8 5v2h16v-2c0-2.76-3.6-5-8-5Z"/></svg>`}</div>
       <h3>${escapeHtml(s.nome || 'Sem nome')}</h3>
       <div class="meta">${escapeHtml(s.org || 'Sem organização')}${s.funcao ? ' · '+escapeHtml(s.funcao) : ''}</div>
+      <div class="plano-tag">${escapeHtml(planoLabel)}</div>
       <button class="del" title="Excluir">&times;</button>
     `;
     c.querySelector('.del').onclick = (ev)=>{ ev.stopPropagation(); deleteSheet(s.id); };
@@ -525,6 +599,136 @@ function renderExe(){
   });
 }
 
+/* ---------- Laços de Alma: render ---------- */
+function lacoSum(l){
+  return LACO_CLASSES.reduce((a,c)=>a + (l.pts[c.key]||0), 0);
+}
+
+function lacoChartSvg(l){
+  const n = LACO_CLASSES.length, R = 100, C = 140;
+  const pt = (i,r) => {
+    const ang = -Math.PI/2 + i*(2*Math.PI/n);
+    return [C + r*Math.cos(ang), C + r*Math.sin(ang)];
+  };
+  let svg = `<svg viewBox="0 0 280 280">`;
+  [0.25,0.5,0.75,1].forEach(f=>{
+    const pts = LACO_CLASSES.map((_,i)=>pt(i,R*f).join(',')).join(' ');
+    svg += `<polygon class="ring" points="${pts}"/>`;
+  });
+  LACO_CLASSES.forEach((_,i)=>{ const [x,y]=pt(i,R); svg += `<line class="axis" x1="${C}" y1="${C}" x2="${x}" y2="${y}"/>`; });
+  const poly = LACO_CLASSES.map((c,i)=>pt(i,((l.pts[c.key]||0)/LACO_MAX)*R).join(',')).join(' ');
+  svg += `<polygon class="poly" points="${poly}"/>`;
+  LACO_CLASSES.forEach((c,i)=>{
+    const v = l.pts[c.key]||0;
+    const [px,py] = pt(i,(v/LACO_MAX)*R);
+    svg += `<circle cx="${px}" cy="${py}" r="3.5" fill="${c.color}"/>`;
+    const [lx,ly] = pt(i,R+26);
+    svg += `<text class="axlabel" x="${lx}" y="${ly-4}" text-anchor="middle" style="fill:${c.color}">${c.label}</text>`;
+    svg += `<text class="axval" x="${lx}" y="${ly+9}" text-anchor="middle">${v}</text>`;
+  });
+  svg += `</svg>`;
+  return svg;
+}
+
+function renderLacos(){
+  const col = document.getElementById('lacos-list');
+  col.innerHTML = '';
+  working.lacos.forEach((l,i)=>{
+    const card = document.createElement('div'); card.className = 'laco-card';
+
+    // cabeçalho: nome, total, remover
+    const head = document.createElement('div'); head.className = 'laco-head';
+    const fName = document.createElement('div'); fName.className = 'field';
+    fName.innerHTML = '<label class="f">Nome do poder</label>';
+    const nameIn = document.createElement('input'); nameIn.type = 'text';
+    nameIn.placeholder = 'Ex: Cuspir fogo, Armadura curativa...';
+    nameIn.value = l.nome;
+    nameIn.oninput = ()=>{ l.nome = nameIn.value; };
+    fName.appendChild(nameIn);
+    const total = document.createElement('div'); total.className = 'laco-total';
+    const rm = document.createElement('button'); rm.className = 'laco-rm'; rm.textContent = '×';
+    rm.title = 'Remover poder';
+    rm.onclick = ()=>{
+      working.lacos.splice(i,1);
+      if(working.lacos.length===0) working.lacos.push(blankLaco());
+      renderLacos();
+    };
+    head.appendChild(fName); head.appendChild(total); head.appendChild(rm);
+    card.appendChild(head);
+
+    // descrição
+    const fDesc = document.createElement('div'); fDesc.className = 'field';
+    fDesc.innerHTML = '<label class="f">Descrição</label>';
+    const descIn = document.createElement('textarea');
+    descIn.style.minHeight = '56px';
+    descIn.placeholder = 'O que o poder faz e de qual laço ele nasceu';
+    descIn.value = l.desc;
+    descIn.oninput = ()=>{ l.desc = descIn.value; };
+    fDesc.appendChild(descIn);
+    card.appendChild(fDesc);
+
+    // gráfico + classes
+    const body = document.createElement('div'); body.className = 'laco-body';
+    const chart = document.createElement('div'); chart.className = 'attr-chart laco-chart';
+    const controls = document.createElement('div'); controls.className = 'laco-controls';
+    const tags = document.createElement('div'); tags.className = 'laco-tags';
+    const refresh = ()=>{
+      const sum = lacoSum(l);
+      total.innerHTML = `<span>${sum}</span> / ${LACO_MAX}`;
+      total.classList.toggle('full', sum===LACO_MAX);
+      const used = LACO_CLASSES.filter(c=>l.pts[c.key]>0)
+        .sort((a,b)=>l.pts[b.key]-l.pts[a.key])
+        .map(c=>c.label);
+      tags.textContent = used.length ? used.join(' + ') : 'Nenhuma classe definida';
+      chart.innerHTML = lacoChartSvg(l);
+    };
+
+    LACO_CLASSES.forEach(c=>{
+      const row = document.createElement('div'); row.className = 'cls-row';
+      row.style.setProperty('--c', c.color);
+      const name = document.createElement('div'); name.className = 'cls-name'; name.textContent = c.label;
+      const range = document.createElement('input'); range.type = 'range';
+      range.min = 0; range.max = LACO_MAX; range.step = 1;
+      range.value = l.pts[c.key];
+      const val = document.createElement('div'); val.className = 'cls-pts'; val.textContent = l.pts[c.key];
+      range.oninput = ()=>{
+        const others = LACO_CLASSES.reduce((a,k)=> k.key===c.key ? a : a + l.pts[k.key], 0);
+        let v = Number(range.value);
+        const cap = LACO_MAX - others;
+        if(v > cap){ v = cap; range.value = v; }
+        l.pts[c.key] = v;
+        val.textContent = v;
+        refresh();
+      };
+      row.appendChild(name); row.appendChild(range); row.appendChild(val);
+      controls.appendChild(row);
+    });
+    controls.appendChild(tags);
+    body.appendChild(chart); body.appendChild(controls);
+    card.appendChild(body);
+    refresh();
+    col.appendChild(card);
+  });
+}
+
+/* ---------- Plano base: troca o sistema de poder ---------- */
+function fillPlanoSelect(){
+  const sel = document.getElementById('f-plano');
+  sel.innerHTML = '';
+  Object.entries(PLANOS).forEach(([key,p])=>{
+    const o = document.createElement('option');
+    o.value = key; o.textContent = `${p.label} · ${p.desc}`;
+    sel.appendChild(o);
+  });
+}
+
+function applyPlano(){
+  const plano = PLANOS[working.plano] || PLANOS[PLANO_PADRAO];
+  document.getElementById('f-plano').value = working.plano;
+  document.getElementById('sec-exe').classList.toggle('hidden', plano.sistema !== 'exencia');
+  document.getElementById('sec-lacos').classList.toggle('hidden', plano.sistema !== 'lacos');
+}
+
 function autoGrow(el){
   el.style.height = 'auto';
   el.style.height = el.scrollHeight + 'px';
@@ -606,7 +810,8 @@ function openEditor(id){
     pb.insertBefore(img, pb.firstChild);
   }
 
-  renderAttrs(); renderExe(); renderTecnicas(); renderFamiliares(); renderAmigos(); renderInimigos(); renderInventario();
+  renderAttrs(); renderExe(); renderLacos(); applyPlano();
+  renderTecnicas(); renderFamiliares(); renderAmigos(); renderInimigos(); renderInventario();
 
   document.getElementById('btn-delete').classList.toggle('hidden', isNew);
 
@@ -619,6 +824,7 @@ function collectWorkingFromForm(){
   working.nome = document.getElementById('f-nome').value;
   working.rank = document.getElementById('f-rank').value;
   working.org = document.getElementById('f-org').value;
+  working.plano = document.getElementById('f-plano').value;
   working.historia = document.getElementById('f-historia').value;
   working.funcao = document.getElementById('f-funcao').value;
   working.rankFonte = document.getElementById('f-rank-fonte').value;
@@ -634,6 +840,16 @@ function updateSpecLabel(){
 }
 document.getElementById('f-spec').oninput = updateSpecLabel;
 document.getElementById('f-historia').oninput = (e)=> autoGrow(e.target);
+
+fillPlanoSelect();
+document.getElementById('f-plano').onchange = (e)=>{
+  working.plano = e.target.value;
+  applyPlano();
+};
+document.getElementById('btn-add-laco').onclick = ()=>{
+  working.lacos.push(blankLaco());
+  renderLacos();
+};
 
 function saveCurrent(){
   collectWorkingFromForm();
